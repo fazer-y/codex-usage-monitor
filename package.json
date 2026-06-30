@@ -11,7 +11,9 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "smoke:statusline": "node bin/codex-usage-monitor.js statusline --file test/fixtures/session-basic.jsonl",
-    "smoke:summary": "node bin/codex-usage-monitor.js summary --file test/fixtures/session-basic.jsonl"
+    "smoke:summary": "node bin/codex-usage-monitor.js summary --file test/fixtures/session-basic.jsonl",
+    "desktop": "electron desktop/main.js",
+    "desktop:package": "electron-builder --config desktop/electron-builder.json"
   },
   "keywords": [
     "codex",
@@ -39,11 +41,16 @@
   "files": [
     ".codex-plugin/",
     "bin/",
+    "desktop/",
     "docs/",
     "hooks/",
     "lib/",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
-  ]
+  ],
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  }
 }
