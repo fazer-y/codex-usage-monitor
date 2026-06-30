@@ -4,6 +4,9 @@
   "directories": {
     "output": "dist/desktop"
   },
+  "extraMetadata": {
+    "main": "desktop/main.js"
+  },
   "files": [
     "desktop/**/*",
     "lib/**/*",

@@ -34,6 +34,7 @@ test('desktop packaging config includes platform targets and local files', () =>
   const config = JSON.parse(read('desktop/electron-builder.json'));
 
   assert.equal(config.appId, 'dev.codex-usage-monitor.desktop');
+  assert.equal(config.extraMetadata.main, 'desktop/main.js');
   assert.deepEqual(config.win.target, ['nsis', 'dir']);
   assert.deepEqual(config.mac.target, ['dmg', 'zip']);
   assert.deepEqual(config.linux.target, ['AppImage', 'deb']);
