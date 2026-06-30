@@ -52,9 +52,9 @@ Stop-hook box after a Codex turn:
 
 Install the plugin and restart Codex. The bundled Stop hook prints a colored
 usage box after each completed turn. It does not replace the native Codex
-footer. Because some Codex surfaces capture hook stdout and stderr, the hook
-also tries to write directly to the active terminal (`CONOUT$` on Windows,
-`/dev/tty` on Linux and macOS).
+footer. Hook output is written through stderr by default so Codex can keep
+control of the terminal layout. If a Codex surface hides hook stderr, set
+`CODEX_USAGE_MONITOR_DIRECT_TTY=1` to opt in to direct terminal writes.
 
 ### While Codex Is Working
 
@@ -207,7 +207,7 @@ Environment variables:
 | `CODEX_USAGE_MONITOR_HOOK_INTERVAL_SECONDS=N` | Show the Stop-hook box at most once every `N` seconds. Unset means every turn. |
 | `CODEX_USAGE_MONITOR_WORK_INTERVAL_SECONDS=N` | Show the work-in-progress hook box at most once every `N` seconds. Default: 300. |
 | `CODEX_USAGE_MONITOR_DESKTOP_INTERVAL_SECONDS=N` | Refresh the desktop tray app at most once every `N` seconds. Default: 5. |
-| `CODEX_USAGE_MONITOR_DIRECT_TTY=0` | Disable direct terminal writes from hooks. |
+| `CODEX_USAGE_MONITOR_DIRECT_TTY=1` | Enable direct terminal writes from hooks when hook stderr is hidden. Off by default to avoid overlapping Codex terminal input. |
 | `CODEX_USAGE_MONITOR_MAX_BYTES=N` | Skip transcript files larger than `N` bytes. Default: 50 MB. |
 
 ## Pricing Notes

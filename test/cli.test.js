@@ -67,7 +67,7 @@ test('help command documents watch interval and hook throttle', () => {
   assert.match(result.stdout, /watch \[--interval 5\].*Refresh statusline every N seconds/);
   assert.match(result.stdout, /CODEX_USAGE_MONITOR_HOOK_INTERVAL_SECONDS=N/);
   assert.match(result.stdout, /CODEX_USAGE_MONITOR_WORK_INTERVAL_SECONDS=N/);
-  assert.match(result.stdout, /CODEX_USAGE_MONITOR_DIRECT_TTY=0/);
+  assert.match(result.stdout, /CODEX_USAGE_MONITOR_DIRECT_TTY=1/);
 });
 
 test('Stop hook writes JSON to stdout and human summary to stderr', () => {

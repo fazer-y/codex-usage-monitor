@@ -5,7 +5,7 @@ const test = require('node:test');
 
 const { writeHumanOutput } = require('../lib/terminal-output');
 
-test('writeHumanOutput writes stderr and direct terminal when stderr is captured on Windows', () => {
+test('writeHumanOutput writes only stderr by default when stderr is captured', () => {
   const writes = [];
   const fakeFs = {
     openSync(file, flags) {
@@ -32,6 +32,36 @@ test('writeHumanOutput writes stderr and direct terminal when stderr is captured
   });
 
   assert.equal(stderrText, 'usage box\n');
+  assert.deepEqual(writes, []);
+});
+
+test('writeHumanOutput writes stderr and direct terminal on Windows when explicitly enabled', () => {
+  const writes = [];
+  const fakeFs = {
+    openSync(file, flags) {
+      writes.push({ file, flags });
+      return 42;
+    },
+    writeSync(fd, text) {
+      writes.push({ fd, text });
+    },
+    closeSync(fd) {
+      writes.push({ fd, close: true });
+    },
+  };
+  let stderrText = '';
+
+  writeHumanOutput('usage box\n', {
+    env: { CODEX_USAGE_MONITOR_DIRECT_TTY: '1' },
+    fs: fakeFs,
+    platform: 'win32',
+    stderr: {
+      isTTY: false,
+      write(text) { stderrText += text; },
+    },
+  });
+
+  assert.equal(stderrText, 'usage box\n');
   assert.deepEqual(writes, [
     { file: '\\\\.\\CONOUT$', flags: 'w' },
     { fd: 42, text: 'usage box\n' },
@@ -39,7 +69,7 @@ test('writeHumanOutput writes stderr and direct terminal when stderr is captured
   ]);
 });
 
-test('writeHumanOutput writes /dev/tty on POSIX when stderr is captured', () => {
+test('writeHumanOutput writes /dev/tty on POSIX when explicitly enabled', () => {
   const writes = [];
   const fakeFs = {
     openSync() {
@@ -51,7 +81,7 @@ test('writeHumanOutput writes /dev/tty on POSIX when stderr is captured', () => 
   };
 
   writeHumanOutput('usage box\n', {
-    env: {},
+    env: { CODEX_USAGE_MONITOR_DIRECT_TTY: 'true' },
     fs: fakeFs,
     platform: 'linux',
     stderr: {

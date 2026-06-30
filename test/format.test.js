@@ -86,3 +86,18 @@ test('formatStopBox renders a bordered multi-line summary', () => {
   assert.match(box, /Models/);
   assert.match(box, /Cost/);
 });
+
+test('formatStopBox keeps colored borders aligned by visible width', () => {
+  const box = formatStopBox(summary, { now: 1782790300, color: true });
+  const visibleLines = box.split('\n').map(stripAnsi);
+  const widths = visibleLines.map((line) => line.length);
+
+  assert.equal(new Set(widths).size, 1);
+  for (const line of visibleLines.slice(1, -1)) {
+    assert.match(line, /^│ .* │$/);
+  }
+});
+
+function stripAnsi(value) {
+  return String(value).replace(/\x1b\[[0-9;]*m/g, '');
+}

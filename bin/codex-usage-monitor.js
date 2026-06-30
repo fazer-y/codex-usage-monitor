@@ -140,7 +140,7 @@ Environment:
                    Throttle Stop-hook boxes to once every N seconds
   CODEX_USAGE_MONITOR_WORK_INTERVAL_SECONDS=N
                    Throttle PostToolUse boxes to once every N seconds
-  CODEX_USAGE_MONITOR_DIRECT_TTY=0
-                   Disable direct terminal writes from hooks
+  CODEX_USAGE_MONITOR_DIRECT_TTY=1
+                   Enable direct terminal writes from hooks when stderr is hidden
 `;
 }
