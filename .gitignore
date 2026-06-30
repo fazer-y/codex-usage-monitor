@@ -2,6 +2,7 @@ node_modules/
 .worktrees/
 npm-debug.log*
 coverage/
+dist/
 .DS_Store
 Thumbs.db
 *.log
