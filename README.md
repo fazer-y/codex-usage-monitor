@@ -40,7 +40,10 @@ Stop-hook box after a Codex turn:
 - Estimates API-equivalent cost from a bundled OpenAI pricing table.
 - Breaks cost down by model when a session uses multiple models.
 - Provides `summary`, `statusline`, `json`, `watch`, and `doctor` commands.
-- Uses only Node.js built-ins. No install step beyond cloning the repo.
+- Provides an Electron desktop tray app for graphical Windows, macOS, and
+  Ubuntu sessions.
+- Keeps the CLI/plugin runtime on Node.js built-ins with no install step beyond
+  cloning the repo.
 - Keeps all data local. No telemetry, no network calls at runtime.
 
 ## Recommended Usage
@@ -91,6 +94,39 @@ codex-usage-monitor watch --interval 60
 The Stop hook and watcher do not consume model quota. They read local Codex
 session JSONL files, perform local formatting, and do not make network or model
 calls.
+
+## Desktop Tray App
+
+The desktop app runs as an Electron tray or menu bar monitor on Windows, macOS,
+and Ubuntu graphical desktops. It starts hidden when the platform tray is
+available; click the tray icon to open the compact usage panel. On Linux
+desktop sessions without a tray or app indicator area, the same panel opens as
+a normal window.
+
+Install development dependencies and start the desktop app:
+
+```bash
+npm install
+npm run desktop
+```
+
+Package local installers for the current platform:
+
+```bash
+npm run desktop:package
+```
+
+The desktop app does not consume model quota. It reads local Codex session JSONL
+files from `CODEX_HOME` or `~/.codex`, summarizes them on the same machine, and
+does not call OpenAI APIs, model endpoints, telemetry services, or runtime price
+update services.
+
+Desktop environment variables:
+
+| Variable | Effect |
+| --- | --- |
+| `CODEX_USAGE_MONITOR_DESKTOP_INTERVAL_SECONDS=N` | Refresh the desktop snapshot every `N` seconds. Default: 5. |
+| `CODEX_HOME=PATH` | Read Codex sessions from a custom home directory. |
 
 ## Install
 
@@ -163,6 +199,7 @@ Environment variables:
 | `CODEX_USAGE_MONITOR_QUIET=1` | Silence the Stop-hook summary box. |
 | `CODEX_USAGE_MONITOR_HOOK_INTERVAL_SECONDS=N` | Show the Stop-hook box at most once every `N` seconds. Unset means every turn. |
 | `CODEX_USAGE_MONITOR_WORK_INTERVAL_SECONDS=N` | Show the work-in-progress hook box at most once every `N` seconds. Default: 300. |
+| `CODEX_USAGE_MONITOR_DESKTOP_INTERVAL_SECONDS=N` | Refresh the desktop tray app at most once every `N` seconds. Default: 5. |
 | `CODEX_USAGE_MONITOR_DIRECT_TTY=0` | Disable direct terminal writes from hooks. |
 | `CODEX_USAGE_MONITOR_MAX_BYTES=N` | Skip transcript files larger than `N` bytes. Default: 50 MB. |
 
