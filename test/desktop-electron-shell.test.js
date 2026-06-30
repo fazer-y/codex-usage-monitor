@@ -1,0 +1,49 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+
+const root = path.join(__dirname, '..');
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), 'utf8');
+}
+
+test('Electron main process uses a secure local renderer configuration', () => {
+  const source = read('desktop/main.js');
+
+  assert.match(source, /contextIsolation:\s*true/);
+  assert.match(source, /nodeIntegration:\s*false/);
+  assert.match(source, /loadFile/);
+  assert.doesNotMatch(source, /https?:\/\//);
+});
+
+test('preload exposes only the usage monitor IPC bridge', () => {
+  const source = read('desktop/preload.js');
+
+  assert.match(source, /contextBridge\.exposeInMainWorld\('codexUsageMonitor'/);
+  assert.match(source, /usage:getSnapshot/);
+  assert.match(source, /usage:refresh/);
+  assert.match(source, /usage:snapshot/);
+  assert.doesNotMatch(source, /require\('node:fs'\)/);
+});
+
+test('desktop packaging config includes platform targets and local files', () => {
+  const config = JSON.parse(read('desktop/electron-builder.json'));
+
+  assert.equal(config.appId, 'dev.codex-usage-monitor.desktop');
+  assert.deepEqual(config.win.target, ['nsis', 'dir']);
+  assert.deepEqual(config.mac.target, ['dmg', 'zip']);
+  assert.deepEqual(config.linux.target, ['AppImage', 'deb']);
+  assert.equal(config.files.includes('desktop/**/*'), true);
+  assert.equal(config.files.includes('lib/**/*'), true);
+});
+
+test('tray icon asset exists', () => {
+  const source = read('desktop/assets/tray.svg');
+
+  assert.match(source, /<svg/);
+  assert.match(source, /Codex Usage Monitor|path|rect/);
+});
