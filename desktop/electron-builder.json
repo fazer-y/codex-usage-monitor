@@ -15,6 +15,7 @@
     "LICENSE"
   ],
   "win": {
+    "signAndEditExecutable": false,
     "target": ["nsis", "dir"]
   },
   "mac": {

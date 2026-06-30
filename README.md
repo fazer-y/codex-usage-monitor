@@ -110,10 +110,17 @@ npm install
 npm run desktop
 ```
 
-Package local installers for the current platform:
+Package an unpacked desktop app for the current platform:
 
 ```bash
 npm run desktop:package
+```
+
+Build installer artifacts for the current platform when your environment has
+the required signing and packaging privileges:
+
+```bash
+npm run desktop:dist
 ```
 
 The desktop app does not consume model quota. It reads local Codex session JSONL

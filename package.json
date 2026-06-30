@@ -13,7 +13,8 @@
     "smoke:statusline": "node bin/codex-usage-monitor.js statusline --file test/fixtures/session-basic.jsonl",
     "smoke:summary": "node bin/codex-usage-monitor.js summary --file test/fixtures/session-basic.jsonl",
     "desktop": "electron desktop/main.js",
-    "desktop:package": "electron-builder --config desktop/electron-builder.json"
+    "desktop:package": "electron-builder --dir --config desktop/electron-builder.json",
+    "desktop:dist": "electron-builder --config desktop/electron-builder.json"
   },
   "keywords": [
     "codex",
