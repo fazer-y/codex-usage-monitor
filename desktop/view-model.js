@@ -1,6 +1,6 @@
 'use strict';
 
-const { formatTokens, formatUsd } = require('../lib/format');
+const { formatTokens, formatUsd, formatCost } = require('../lib/format');
 
 function snapshotToViewModel(snapshot) {
   if (!snapshot || snapshot.status !== 'ready' || !snapshot.summary) {
@@ -59,8 +59,7 @@ function turnText(usage) {
 }
 
 function costText(cost) {
-  if (!cost || cost.usd == null) return '';
-  return `API≈${cost.complete ? '' : '~'}${formatUsd(cost.usd)}`;
+  return formatCost(cost);
 }
 
 function modelText(cost) {

@@ -43,7 +43,7 @@ test('statusline command prints a compact one-line summary', () => {
   assert.equal(result.status, 0);
   assert.equal(result.stderr, '');
   assert.match(result.stdout.trim(), /GPT-5\.4 mini/);
-  assert.match(result.stdout.trim(), /API≈\$0\.0032/);
+  assert.match(result.stdout.trim(), /API 等价估算: \$0\.0080/);
 });
 
 test('json command emits machine-readable usage summary', () => {

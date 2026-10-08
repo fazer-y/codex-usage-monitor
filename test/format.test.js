@@ -72,7 +72,7 @@ test('formatStatusLine shows model, reasoning, context, limits, tokens, cache, a
   assert.match(line, /7d #---- 15%/);
   assert.match(line, /turn in 1\.2k out 200/);
   assert.match(line, /cache ###-- 50%/);
-  assert.match(line, /API≈\$0\.0032/);
+  assert.match(line, /API 等价估算: \$0\.0032/);
 });
 
 test('formatStopBox renders a bordered multi-line summary', () => {

@@ -12,19 +12,19 @@ const {
 
 test('resolves current Codex model slugs to friendly names', () => {
   assert.equal(modelDisplayName('gpt-5.5'), 'GPT-5.5');
-  assert.equal(modelDisplayName('openai/gpt-5.4-mini-2026-06-01'), 'GPT-5.4 mini');
+  assert.equal(modelInfo('openai/gpt-5.4-mini-2026-06-01'), null);
   assert.equal(modelDisplayName('gpt-5.4-nano'), 'GPT-5.4 nano');
   assert.equal(modelInfo('unknown-model'), null);
 });
 
 test('prices cached input at cached-input rate and output at output rate', () => {
   const usd = costForUsage('gpt-5.5', {
-    inputTokens: 1_000_000,
-    cachedInputTokens: 250_000,
-    outputTokens: 100_000,
+    inputTokens: 100_000,
+    cachedInputTokens: 25_000,
+    outputTokens: 10_000,
   });
 
-  assert.equal(usd, 2.75625);
+  assert.equal(usd, 0.6875);
 });
 
 test('sessionCost reports per-model totals and incomplete pricing for unknown models', () => {
@@ -52,5 +52,6 @@ test('sessionCost reports per-model totals and incomplete pricing for unknown mo
   assert.equal(result.complete, false);
   assert.equal(result.perModel.length, 2);
   assert.equal(result.perModel[0].name, 'GPT-5.5');
-  assert.ok(result.usd > 0);
+  assert.equal(result.usd, null);
+  assert.ok(result.knownUsd > 0);
 });

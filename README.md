@@ -46,54 +46,67 @@ Stop-hook box after a Codex turn:
   cloning the repo.
 - Keeps all data local. No telemetry, no network calls at runtime.
 
-## Recommended Usage
+## Continuous bottom monitor (recommended)
 
-### After Each Codex Turn
+Codex CLI 0.160.1 has an official `/statusline` picker and `tui.status_line`
+for built-in footer item IDs (model, context, limits, token counters, etc.).
+There is no documented custom-command footer interface for adding cache hit
+rate and API-equivalent cost. This project therefore uses a **separate bottom
+tmux pane in the same terminal**, leaving Codex's input in its original pane.
+A one-shot `statusline` or Stop-hook summary is not a persistent footer.
 
-Install the plugin and restart Codex. The bundled Stop hook prints a colored
-usage box after each completed turn. It does not replace the native Codex
-footer. Hook output is written through stderr by default so Codex can keep
-control of the terminal layout. If a Codex surface hides hook stderr, set
-`CODEX_USAGE_MONITOR_DIRECT_TTY=1` to opt in to direct terminal writes.
-
-### While Codex Is Working
-
-The bundled `PostToolUse` hook can print the same monitor while Codex is still
-working. It runs after tool calls and is throttled to once every 300 seconds by
-default:
+On the machine running Codex, inside its tmux window:
 
 ```bash
-CODEX_USAGE_MONITOR_WORK_INTERVAL_SECONDS=300
+codex-usage-monitor pane --file /absolute/path/to/current-session.jsonl
+codex-usage-monitor config --style detailed --interval 2
+codex-usage-monitor preview --file /absolute/path/to/current-session.jsonl
 ```
 
-Set the value to `0` to show after every tool call, or use a larger number for
-less frequent updates.
+When invoked by Codex, `pane` can locate `CODEX_THREAD_ID` automatically.
+Outside Codex, supply `--file` explicitly. It never silently selects a historical
+session for the pane. Repeated `pane` calls reuse the existing monitor.
+Select the monitor and press `q` or Ctrl-C to close it. Codex keeps running.
 
-### During Long Tasks
+Styles: `classic`, `minimal` (no bars), `compact` (short bars),
+`detailed` (extra request detail), `ascii` (ASCII bars, no color), and
+`mono` (no color). Preview uses local data, not invented usage.
+Live panes reload configuration every tick. CLI flags override environment
+variables, which override the saved config, then defaults.
 
-Run the watcher in another terminal, split pane, or tmux pane:
+Config: `~/.config/codex-usage-monitor/config.json`, overridable with
+`CODEX_USAGE_MONITOR_CONFIG`. Each update backs up the prior file as
+`config.json.bak-TIMESTAMP-PID`. Invalid config is preserved, never overwritten.
+Environment overrides: `CODEX_USAGE_MONITOR_STYLE` and
+`CODEX_USAGE_MONITOR_INTERVAL` (1–3600 seconds).
 
-```bash
-codex-usage-monitor watch --interval 60
-```
+Standalone `watch --interval 5` stays alive and emits newline-separated
+snapshots when redirected. For a persistent terminal display, use `pane`;
+`watch --pane` owns its dedicated terminal screen and must not be injected into
+Codex's input pane. Output is clipped to pane dimensions and terminal control
+characters from session data are removed.
 
-PowerShell:
+The header displays refresh time/counter and the last transcript update time.
+Quota data is the most recent Codex log snapshot, not a live server query;
+a passed reset time does not imply that the server has refreshed the quota.
+No API requests, authentication reads or model quota are needed.
 
-```powershell
-codex-usage-monitor watch --interval 60
-```
+### Oracle / Windows workflow
 
-Bash, Ubuntu, macOS, or tmux:
+Keep source and project tests in `E:\\Project\\codex-usage-monitor`.
+Deploy only `bin/codex-usage-monitor.js` and `lib/{config,format,pane,pricing,session}.js`
+to Oracle's current user's runtime directory (for example
+`~/.local/share/codex-usage-monitor`), with a launcher in `~/.local/bin`.
+Preserve existing runtime/config backups before replacement.
+Do not deploy Windows session history, Electron, node_modules, hooks or credentials.
+The monitor reads sessions on the machine where it runs; for harvey on Oracle,
+that is harvey's own `~/.codex/sessions` (or `CODEX_HOME`).
 
-```bash
-codex-usage-monitor watch --interval 60
-```
+### Optional after-turn summaries
 
-### Quota Impact
-
-The Stop hook and watcher do not consume model quota. They read local Codex
-session JSONL files, perform local formatting, and do not make network or model
-calls.
+The existing Stop/PostToolUse hooks remain optional summaries. They do not
+implement a persistent footer. Keep direct TTY writes disabled to avoid
+overlapping Codex input. The tmux workflow does not install these hooks.
 
 ## Desktop Tray App
 
@@ -212,21 +225,20 @@ Environment variables:
 
 ## Pricing Notes
 
-`API≈` means API-equivalent dollars, not your Codex subscription bill. The
-pricing table lives in `lib/pricing.js` and was checked against the OpenAI API
-pricing page on 2026-06-30. Pricing can change, so update the table when OpenAI
-changes model prices.
+Every cost is labeled **API 等价估算** (API-equivalent estimate), using
+**Standard API** text-token prices verified 2026-10-08, not the subscription bill.
+Rates and sources are in `lib/pricing.js` and [docs/MONITOR.md](docs/MONITOR.md).
 
-The current cost formula is:
+Only exact, explicitly verified model IDs are priced. Unknown IDs, provider
+prefixes, undocumented snapshots, missing usage, or ambiguous cumulative gaps
+display **不可估算** (unavailable), with JSON `usd: null`. Known-model subtotals
+remain available as `knownUsd`; they are never presented as a complete total.
 
-```text
-uncached_input_tokens * input_rate
-+ cached_input_tokens * cached_input_rate
-+ output_tokens * output_rate
-```
-
-Unknown models are not treated as free. If any model in the session is missing
-from the pricing table, the monitor marks the total as approximate with `~`.
+Cached reads are separated from uncached input; cache writes are priced when
+reported and supported. Reasoning tokens are already included in output and
+are not billed twice. GPT-6 request-level long-context multipliers are applied
+above 272k input tokens. GPT-5.4/5.5 long-context session repricing is conservatively
+unavailable. Fast-mode premiums, regions and tool charges are excluded.
 
 ## How It Works
 
@@ -238,7 +250,7 @@ Codex session logs contain records like:
   rolling limits, plan type.
 
 The monitor reads those records locally, keeps the latest total usage snapshot,
-sums per-turn usage into per-model buckets, then renders either a single line,
+uses cumulative high-water deltas (deduplicating repeated events) in per-model buckets, then renders either a single line,
 a box, or JSON.
 
 See [docs/DESIGN.md](docs/DESIGN.md) for the full architecture.
