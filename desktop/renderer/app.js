@@ -1,6 +1,9 @@
 'use strict';
 
 const bridge = window.codexUsageMonitor;
+const { translator, resolveLocale } = window.codexUsageI18n;
+let locale = 'en';
+let t = translator(locale);
 const title = document.getElementById('title');
 const reasoning = document.getElementById('reasoning');
 const metrics = document.getElementById('metrics');
@@ -35,8 +38,26 @@ bridge.getTheme().then(applyTheme).catch(renderError);
 function applyTheme(theme) {
   if (!theme) return;
   const root = document.documentElement;
+  const nextLocale = resolveLocale(theme.locale);
+  if (nextLocale !== locale) {
+    locale = nextLocale;
+    t = translator(locale);
+    root.lang = locale;
+    for (const [id, key] of [['refresh', 'refresh'], ['fold', 'foldStrip'], ['restore', 'expandStrip']]) {
+      const element = document.getElementById(id);
+      element.title = t(key);
+      element.setAttribute('aria-label', t(key));
+    }
+    details.setAttribute('aria-label', t('detailsLabel'));
+    strip.setAttribute('aria-label', t('stripLabel'));
+    dock.setAttribute('aria-label', t('dockTitlebar'));
+    document.getElementById('modelGroup').title = t('dragStrip');
+    if (!latestModel) title.textContent = t('waiting');
+    applyWindowState({ docked: dock.getAttribute('aria-pressed') === 'true', expanded: !details.hidden });
+    if (latestModel && !folded) renderStrip(latestModel);
+  }
   root.style.colorScheme = theme.mode;
-  const properties = { surface: '--surface', surfaceFill: '--surface-fill', text: '--text', muted: '--muted', line: '--line',
+  const properties = { surfaceFill: '--surface-fill', text: '--text', muted: '--muted', line: '--line',
     accent: '--accent', accentText: '--accent-text', accentSoft: '--accent-soft', hover: '--hover', grip: '--grip', danger: '--danger' };
   for (const [key, property] of Object.entries(properties)) root.style.setProperty(property, theme.colors[key]);
 }
@@ -56,14 +77,14 @@ function applyWindowState(state) {
   }
   if (typeof state.docked === 'boolean') {
     dock.setAttribute('aria-pressed', String(state.docked));
-    dock.title = state.docked ? '解除吸附' : '居中吸附到 Codex 标题栏';
+    dock.title = t(state.docked ? 'detach' : 'dockTitlebar');
   }
   if (typeof state.expanded === 'boolean') {
     const expanded = state.expanded && !folded;
     details.hidden = !expanded;
     expand.setAttribute('aria-expanded', String(expanded));
-    expand.setAttribute('aria-label', expanded ? '收起用量详情' : '展开用量详情');
-    expand.title = expanded ? '收起详情' : '展开详情';
+    expand.setAttribute('aria-label', t(expanded ? 'collapseDetails' : 'expandDetails'));
+    expand.title = t(expanded ? 'collapseDetails' : 'expandDetails');
     if (expanded && latestModel) renderDetails(latestModel);
   }
   if (typeof state.detailsBelow === 'boolean') panel.dataset.detailsBelow = String(state.detailsBelow);
@@ -81,16 +102,16 @@ function render(model) {
 }
 
 function renderStrip(model) {
-  title.textContent = model.title || '等待会话';
+  title.textContent = model.title || t('waiting');
   title.title = [model.title, model.subtitle].filter(Boolean).join(' · ');
   const effort = model.subtitle || '';
   const effortName = effort === 'xhigh' ? 'XHigh' : effort.charAt(0).toUpperCase() + effort.slice(1);
   reasoning.textContent = effortName;
   reasoning.hidden = !effort;
-  reasoning.title = effort ? '思考强度：' + effortName : '';
+  reasoning.title = effort ? t('reasoning', { effort: effortName }) : '';
   const status = document.getElementById('status');
   status.className = 'status-dot ' + (model.status === 'ready' ? '' : model.status);
-  status.title = model.trackingLabel || '正在读取本地用量';
+  status.title = model.trackingLabel || t('readingUsage');
   metrics.replaceChildren(...(model.metrics || []).map(renderMetric));
 }
 
@@ -98,7 +119,7 @@ function renderDetails(model) {
   const next = JSON.stringify([model.conversationTitle, model.rows, model.cost, model.footer]);
   if (next === detailsSignature) return;
   detailsSignature = next;
-  document.getElementById('conversation').textContent = model.conversationTitle || '当前会话';
+  document.getElementById('conversation').textContent = model.conversationTitle || t('currentConversation');
   rows.replaceChildren(...(model.rows || []).map(renderRow));
   document.getElementById('cost').textContent = model.cost || '';
   document.getElementById('footer').textContent = model.footer || '';
@@ -135,5 +156,5 @@ function renderRow(row) {
 }
 
 function renderError(error) {
-  render({ status: 'error', title: '读取失败', rows: [{ label: '状态', value: error?.message || '暂时无法读取统计' }] });
+  render({ status: 'error', title: t('readFailed'), rows: [{ label: t('status'), value: error?.message || t('unavailable') }] });
 }

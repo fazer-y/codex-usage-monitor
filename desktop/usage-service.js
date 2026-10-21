@@ -45,12 +45,12 @@ function createUsageService(options = {}) {
         selection: selected ? { id: selected.id, mode: 'desktop', viewedAt: selected.time } : { id: null, mode: 'activity' },
         conversationTitle: entry?.title || '',
       };
-      if (!transcriptPath) return { ...base, status: 'waiting', summary: null,
+      if (!transcriptPath) return { ...base, status: 'waiting', summary: null, reason: selected ? 'selectedLogMissing' : 'noSessions',
         message: selected ? 'Waiting for the selected conversation log.' : 'No Codex session JSONL files found.' };
       try {
         const summary = await reader.read(transcriptPath);
         if (!summary || (selected && summary.sessionId !== selected.id)) {
-          return { ...base, status: 'waiting', summary: null, message: 'Waiting for usage in the selected conversation.' };
+          return { ...base, status: 'waiting', summary: null, reason: 'noUsage', message: 'Waiting for usage in the selected conversation.' };
         }
         return { ...base, status: 'ready', summary, message: 'Local usage updated.' };
       } catch (error) {

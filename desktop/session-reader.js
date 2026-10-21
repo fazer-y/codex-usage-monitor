@@ -2,6 +2,7 @@
 
 const fs = require('node:fs/promises');
 const { createSessionAccumulator } = require('../lib/session');
+const { pricingRevision } = require('../lib/pricing');
 
 class SessionReader {
   constructor({ maxEntries = 4 } = {}) {
@@ -24,7 +25,13 @@ class SessionReader {
       this.entries.delete(file);
       this.entries.set(file, entry);
       while (this.entries.size > this.maxEntries) this.entries.delete(this.entries.keys().next().value);
-      if (stat.size === entry.offset) return entry.snapshot;
+      if (stat.size === entry.offset) {
+        if (entry.pricingRevision !== pricingRevision()) {
+          entry.snapshot = entry.accumulator.snapshot();
+          entry.pricingRevision = pricingRevision();
+        }
+        return entry.snapshot;
+      }
 
       const end = stat.size;
       while (entry.offset < end) {
@@ -55,6 +62,7 @@ class SessionReader {
       }
       entry.mtimeMs = stat.mtimeMs;
       entry.snapshot = entry.accumulator.snapshot();
+      entry.pricingRevision = pricingRevision();
       return entry.snapshot;
     } finally {
       await handle.close();

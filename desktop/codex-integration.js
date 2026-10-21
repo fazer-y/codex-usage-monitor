@@ -5,12 +5,20 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
-function findCodexCli() {
-  const found = spawnSync('where.exe', ['codex.exe'], { encoding: 'utf8', windowsHide: true });
+function findCodexCli({ run = spawnSync, exists = fs.existsSync, env = process.env } = {}) {
+  const found = run('where.exe', ['codex.exe'], { encoding: 'utf8', windowsHide: true, timeout: 10000 });
   const candidates = (found.stdout || '').trim().split(/\r?\n/);
-  if (process.env.LOCALAPPDATA) candidates.push(path.join(process.env.LOCALAPPDATA, 'Programs', 'OpenAI', 'Codex', 'bin', 'codex.exe'));
-  const executable = candidates.find(candidate => candidate && fs.existsSync(candidate));
-  if (!executable) throw new Error('Codex CLI was not found. Add codex.exe to PATH and run Connect-Codex.cmd again.');
+  if (env.LOCALAPPDATA) candidates.push(path.join(env.LOCALAPPDATA, 'Programs', 'OpenAI', 'Codex', 'bin', 'codex.exe'));
+  let executable = candidates.find(candidate => candidate && exists(candidate));
+  if (!executable) {
+    const installed = run('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-Command',
+      "Get-AppxPackage -Name 'OpenAI.Codex' | Select-Object -ExpandProperty InstallLocation"],
+    { encoding: 'utf8', windowsHide: true, timeout: 10000 });
+    const root = (installed.stdout || '').trim();
+    const bundled = root ? path.join(root, 'app', 'resources', 'codex.exe') : null;
+    if (bundled && exists(bundled)) executable = bundled;
+  }
+  if (!executable) throw new Error('Codex CLI was not found. Install Codex and run this installer again.');
   return executable;
 }
 

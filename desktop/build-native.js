@@ -5,7 +5,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 if (process.platform === 'win32') {
-  const compiler = path.join(process.env.SystemRoot || 'C:\\Windows', 'Microsoft.NET', 'Framework64', 'v4.0.30319', 'csc.exe');
+  const compiler = path.join(process.env.SystemRoot, 'Microsoft.NET', 'Framework64', 'v4.0.30319', 'csc.exe');
   const output = path.join(__dirname, 'native', 'bin', 'window-observer.exe');
   fs.mkdirSync(path.dirname(output), { recursive: true });
   const result = spawnSync(compiler, ['/nologo', '/optimize+', '/target:exe', `/out:${output}`,

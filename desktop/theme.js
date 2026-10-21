@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { parse } = require('smol-toml');
+const { resolveLocale } = require('./i18n');
 
 const DEFAULTS = {
   light: { surface: '#ffffff', ink: '#1a1c1f', accent: '#339cff', danger: '#ba2623' },
@@ -17,7 +18,7 @@ function mix(foreground, background, amount) {
     + channel(background, offset) * (1 - amount)).toString(16).padStart(2, '0')).join('');
 }
 
-function themeFromConfig(config, systemDark) {
+function themeFromConfig(config, systemDark, systemLocale = 'en') {
   const desktop = config.desktop || {};
   const mode = ['light', 'dark'].includes(desktop.appearanceTheme) ? desktop.appearanceTheme : systemDark ? 'dark' : 'light';
   const seed = desktop[mode === 'dark' ? 'appearanceDarkChromeTheme' : 'appearanceLightChromeTheme'] || {};
@@ -27,6 +28,7 @@ function themeFromConfig(config, systemDark) {
   const accent = color(seed.accent, defaults.accent);
   return {
     mode,
+    locale: resolveLocale(desktop.localeOverride || systemLocale),
     colors: {
       surface,
       surfaceFill: seed.opaqueWindows === true ? surface : surface + 'e6',
@@ -51,13 +53,13 @@ class CodexTheme {
     this.viewKey = undefined;
   }
 
-  forView(viewKey, systemDark) {
+  forView(viewKey, systemDark, systemLocale) {
     if (this.theme && (this.viewKey === undefined || this.viewKey === viewKey)) {
       this.viewKey = viewKey;
       return this.theme;
     }
     try { this.config = this.loadConfig(); } catch { /* Keep the last complete configuration during an editor save. */ }
-    this.theme = themeFromConfig(this.config, systemDark);
+    this.theme = themeFromConfig(this.config, systemDark, systemLocale);
     this.viewKey = viewKey;
     return this.theme;
   }

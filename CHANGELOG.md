@@ -10,6 +10,12 @@
 - Add a copyable installation prompt for coding agents to both READMEs.
 - Bundle a local MCP server and a Codex plugin installer that reuses the installed application.
 - Manage strip lifetime through Codex host detection and MCP connections.
+- Install the app, shortcuts, and Codex connection in one operation.
+- Check official Standard API prices once at startup and retain cached rates offline.
+- Reprice existing conversations from request-tier subtotals without rereading logs.
+- Remove manual setup wrappers and the unused full-file CLI parser.
+- Follow Codex's language setting for the strip, details, controls, and tray menu.
+- Adapt metric visibility to available space across supported UI languages.
 
 ## 0.2.0 - 2026-10-21
 

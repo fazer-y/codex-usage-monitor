@@ -12,30 +12,25 @@ Windows 上的 Codex 桌面会话统计条。
 - 窗口变宽时增加工具次数、耗时和 API 等价费用。
 - 增量读取日志，实时更新，并缓存最近打开的会话。
 - 使用 Codex 的本地外观配置，在启动和进入会话时检查。
+- 跟随 Codex 界面语言，支持英文、简体中文和繁体中文。
 - 展开查看详情，失去焦点 3 秒后自动收起。
 - 向右收起成小按钮，腾出标题栏；点击即可恢复统计条。
 - 通过本地 Codex 插件启动，随 Codex 退出。
+- 每次启动检查一次官方 API 价格，缓存输入、缓存读取、缓存写入和输出单价。
 
 ## 快速开始
 
 将这段提示词发给 Codex 等 Agent：
 
 ```text
-请从 https://github.com/fazer-y/codex-usage-monitor 的最新 Release 安装 Windows 版 Codex Usage Monitor，运行其中的 Connect-Codex.cmd 启用 Codex 插件，创建桌面和开始菜单快捷方式并启动。保留已有配置。
+请从 https://github.com/fazer-y/codex-usage-monitor 下载并运行最新的 Windows 安装程序，一次完成程序、快捷方式和 Codex 插件的安装。保留已有配置。
 ```
 
-也可手动安装：
+也可直接下载并运行 [Windows 安装程序](https://github.com/fazer-y/codex-usage-monitor/releases/latest/download/codex-usage-monitor-setup-windows-x64.exe)，自动完成程序安装、桌面与开始菜单快捷方式创建、Codex 插件绑定，并打开统计条。
 
-1. 下载 [Windows x64 ZIP](https://github.com/fazer-y/codex-usage-monitor/releases/latest/download/codex-usage-monitor-windows-x64.zip)。
-2. 解压到 `E:\Apps\Codex Usage Monitor` 等目录，运行 `Codex Usage Monitor.exe`。
-3. 在安装目录运行一次 `Connect-Codex.cmd`。
-4. 重启 Codex 并打开会话，插件会启动统计条，数据随使用更新，并随 Codex 退出。
+重启一次 Codex 并打开会话，之后统计条会随会话启动、随 Codex 退出。运行安装程序前先安装 Codex。
 
-也可使用 [Windows 安装程序](https://github.com/fazer-y/codex-usage-monitor/releases/latest/download/codex-usage-monitor-setup-windows-x64.exe)，选择安装目录并创建桌面和开始菜单快捷方式。
-
-插件使用随程序提供的本地 MCP 服务和运行时，小型配置包复用已安装的程序文件。配置时需能找到 `codex.exe`。
-
-运行 `Disconnect-Codex.cmd` 可移除插件连接，Windows 卸载程序也会完成这一步。
+插件通过随程序提供的本地 MCP 服务复用已安装的程序。在 Windows 设置中卸载时，会一并移除插件连接。升级保留已有外观和窗口设置。
 
 ## 操作
 

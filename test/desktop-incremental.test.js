@@ -6,7 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { SessionReader } = require('../desktop/session-reader');
-const { summarizeSessionFile, createSessionAccumulator } = require('../lib/session');
+const { createSessionAccumulator } = require('../lib/session');
+const { summarizeSessionFile } = require('./helpers/session-summary');
 const { costBreakdownForUsage } = require('../lib/pricing');
 
 function directory(t) {

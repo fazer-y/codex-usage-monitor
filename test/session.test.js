@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const test = require('node:test');
 
-const { summarizeSessionFile } = require('../lib/session');
+const { summarizeSessionFile } = require('./helpers/session-summary');
 
 const fixture = path.join(__dirname, 'fixtures', 'session-basic.jsonl');
 
@@ -12,8 +12,6 @@ test('summarizeSessionFile extracts Codex usage, model, effort, context, limits,
   const summary = await summarizeSessionFile(fixture);
 
   assert.equal(summary.sessionId, 'sess_basic');
-  assert.equal(summary.cliVersion, '0.142.4');
-  assert.equal(summary.cwd, 'E:\\Project\\demo');
   assert.equal(summary.model, 'gpt-5.4-mini');
   assert.equal(summary.modelName, 'GPT-5.4 mini');
   assert.equal(summary.reasoningEffort, 'medium');

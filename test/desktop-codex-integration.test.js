@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { installIntegration, removeIntegration } = require('../desktop/codex-integration');
+const { installIntegration, removeIntegration, findCodexCli } = require('../desktop/codex-integration');
 const root = path.join(__dirname, '..');
 
 test('Codex registration creates a small plugin that reuses installed binaries', t => {
@@ -40,6 +40,17 @@ test('Codex registration creates a small plugin that reuses installed binaries',
   installIntegration(options);
   assert.equal(calls.length, 4);
   assert.equal(fs.readFileSync(path.join(userData, 'window-state.json'), 'utf8'), '{"folded":true}');
+});
+
+test('setup finds Codex on PATH or through its Windows app package without machine-specific paths', () => {
+  const calls = [];
+  const fromPath = path.join('runtime', 'codex.exe');
+  assert.equal(findCodexCli({ env: {}, exists: file => file === fromPath,
+    run: command => { calls.push(command); return { stdout: fromPath + '\n' }; } }), fromPath);
+  assert.deepEqual(calls, ['where.exe']);
+  const bundled = path.join('store-package', 'app', 'resources', 'codex.exe');
+  assert.equal(findCodexCli({ env: {}, exists: file => file === bundled,
+    run: command => ({ stdout: command === 'powershell.exe' ? 'store-package\n' : '' }) }), bundled);
 });
 
 test('plugin metadata stays aligned with the packaged runtime', () => {

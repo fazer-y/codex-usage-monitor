@@ -4,8 +4,9 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const test = require('node:test');
 
-const { snapshotToViewModel } = require('../desktop/view-model');
-const { summarizeSessionFile } = require('../lib/session');
+const { snapshotToViewModel: createViewModel } = require('../desktop/view-model');
+const snapshotToViewModel = snapshot => createViewModel(snapshot, Date.now(), 'zh-CN');
+const { summarizeSessionFile } = require('./helpers/session-summary');
 
 test('snapshotToViewModel renders waiting state', () => {
   const vm = snapshotToViewModel({

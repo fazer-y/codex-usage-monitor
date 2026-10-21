@@ -2,7 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { app, BrowserWindow, Menu, Tray, ipcMain, screen, nativeTheme } = require('electron');
+const { app, BrowserWindow, Menu, Tray, ipcMain, screen, nativeTheme, net } = require('electron');
 const { createUsageService } = require('./usage-service');
 const { snapshotToViewModel } = require('./view-model');
 const { observeCodexWindow } = require('./window-observer');
@@ -10,12 +10,14 @@ const { CodexTheme } = require('./theme');
 const { createDetailAutoCollapse } = require('./detail-auto-collapse');
 const { createManagedLifecycle } = require('./managed-lifecycle');
 const { monitorAddress, createMonitorBridge } = require('./monitor-bridge');
+const { createStartupPricing } = require('./pricing-updater');
+const { translator } = require('./i18n');
 const { dockBounds, snapPlacement, expandedBounds, foldedBounds, titlebarSpace, DEFAULT_PLACEMENT,
   STRIP_WIDTH, STRIP_MAX_WIDTH, STRIP_HEIGHT } = require('./docking');
 
 const service = createUsageService();
 const theme = new CodexTheme(service.codexHome);
-const managedLifecycle = createManagedLifecycle(() => app.quit(), { managed: process.argv.includes('--managed') });
+const managedLifecycle = createManagedLifecycle(() => app.quit(), { managed: app.isPackaged || process.argv.includes('--managed') });
 const detailAutoCollapse = createDetailAutoCollapse(() => {
   if (!isQuitting && panelWindow && !panelWindow.isDestroyed()) setExpanded(false);
 });
@@ -24,6 +26,7 @@ let panelWindow = null;
 let latestViewModel = null;
 let observer = null;
 let monitorBridge = null;
+let startupPricing = null;
 let refreshTask = null;
 let refreshAgain = false;
 let isQuitting = false;
@@ -41,6 +44,8 @@ let lastSignature = '';
 let previousHostPid = null;
 let revealUntil = 0;
 let lastThemeSignature = '';
+let systemLocale = 'en';
+let trayLocale = null;
 
 app.setName('Codex Usage Monitor');
 if (!app.requestSingleInstanceLock()) {
@@ -57,6 +62,7 @@ app.on('before-quit', () => {
   isQuitting = true;
   observer?.close();
   monitorBridge?.close();
+  startupPricing?.close();
   managedLifecycle.close();
   detailAutoCollapse.close();
   service.close();
@@ -64,8 +70,11 @@ app.on('before-quit', () => {
 });
 
 async function start() {
+  startupPricing = createStartupPricing({ file: path.join(app.getPath('userData'), 'pricing.json'), fetch: (url, options) => net.fetch(url, options) });
+  await startupPricing.load();
+  systemLocale = app.getLocale?.() || 'en';
   nativeTheme.themeSource = 'system';
-  theme.forView(undefined, nativeTheme.shouldUseDarkColors);
+  theme.forView(undefined, nativeTheme.shouldUseDarkColors, systemLocale);
   Menu.setApplicationMenu(null);
   settingsFile = path.join(app.getPath('userData'), 'window-state.json');
   let saved = {};
@@ -86,6 +95,9 @@ async function start() {
   observer = observeCodexWindow(updateHost, error => console.error('Window observer: ' + error.message));
   service.start(refreshSnapshot);
   await refreshSnapshot();
+  startupPricing.refresh().then(result => {
+    if (result.updated) refreshSnapshot();
+  });
 }
 
 function createTray() {
@@ -93,14 +105,21 @@ function createTray() {
     tray = new Tray(path.join(__dirname, 'assets', 'tray.png'));
     tray.setToolTip('Codex Usage Monitor');
     tray.on('click', showWindow);
-    tray.setContextMenu(Menu.buildFromTemplate([
-      { label: '显示统计条', click: showWindow },
-      { label: '居中吸附到 Codex 标题栏', click: () => setDocked(true) },
-      { label: '刷新', click: refreshSnapshot },
-      { type: 'separator' },
-      { label: '退出', click: () => app.quit() },
-    ]));
+    updateTrayLanguage(theme.theme?.locale);
   } catch (error) { console.error('Tray unavailable: ' + error.message); }
+}
+
+function updateTrayLanguage(locale) {
+  if (!tray || locale === trayLocale) return;
+  trayLocale = locale;
+  const t = translator(locale);
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: t('showStrip'), click: showWindow },
+    { label: t('dockTitlebar'), click: () => setDocked(true) },
+    { label: t('refresh'), click: refreshSnapshot },
+    { type: 'separator' },
+    { label: t('quit'), click: () => app.quit() },
+  ]));
 }
 
 function createWindow(savedBounds) {
@@ -223,13 +242,14 @@ function refreshSnapshot() {
   refreshTask = service.getSnapshot().then(snapshot => {
     const viewKey = snapshot.selection?.mode === 'desktop' ? snapshot.selection.id + ':' + snapshot.selection.viewedAt
       : snapshot.summary?.sessionId || snapshot.transcriptPath || 'waiting';
-    const palette = theme.forView(viewKey, nativeTheme.shouldUseDarkColors);
+    const palette = theme.forView(viewKey, nativeTheme.shouldUseDarkColors, systemLocale);
+    updateTrayLanguage(palette.locale);
     const themeSignature = JSON.stringify(palette);
     if (themeSignature !== lastThemeSignature && panelWindow && !panelWindow.isDestroyed()) {
       lastThemeSignature = themeSignature;
       panelWindow.webContents.send('usage:theme', palette);
     }
-    latestViewModel = snapshotToViewModel(snapshot);
+    latestViewModel = snapshotToViewModel(snapshot, Date.now(), palette.locale);
     const signature = JSON.stringify({ ...latestViewModel, generatedAt: null });
     if (signature !== lastSignature && panelWindow && !panelWindow.isDestroyed()) {
       lastSignature = signature;

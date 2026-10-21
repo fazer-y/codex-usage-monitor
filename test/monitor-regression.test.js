@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { summarizeSessionFile } = require('../lib/session');
+const { summarizeSessionFile } = require('./helpers/session-summary');
 const { modelInfo, sessionCost, costForUsage } = require('../lib/pricing');
 
 
@@ -65,7 +65,7 @@ test('missing accounting and cumulative gaps are explicitly unpriced', async t =
   assert.equal(s.cost.complete, false);
 });
 test('unknown model IDs cannot inherit known prices', () => {
-  for (const id of ['gpt-5.50', 'gpt-5.4-mini-future', 'custom-gpt-5.5', 'gpt-5.5-pro', 'gpt-5.3', 'gpt-6-astra-unknown']) {
+  for (const id of ['gpt-5.50', 'gpt-5.4-mini-future', 'custom-gpt-5.5', 'gpt-5.5-pro-future', 'gpt-5.3', 'gpt-6-astra-unknown']) {
     assert.equal(modelInfo(id), null, id);
     assert.equal(costForUsage(id, { inputTokens: 1000 }), null, id);
   }

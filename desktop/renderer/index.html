@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;">
@@ -9,22 +9,23 @@
 </head>
 <body>
 <main id="panel" class="panel" data-details-below="true" data-folded="false">
-  <section id="details" class="details" hidden aria-label="会话用量详情">
-    <header class="details-header"><strong id="conversation">当前会话</strong><button id="refresh" class="icon-button" type="button" aria-label="Refresh" title="刷新"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 7v5h-5M4 17v-5h5M5.6 7a7 7 0 0 1 11.6-1L20 9M4 15l2.8 3A7 7 0 0 0 18.4 17"/></svg></button></header>
+  <section id="details" class="details" hidden aria-label="Conversation usage details">
+    <header class="details-header"><strong id="conversation">Current conversation</strong><button id="refresh" class="icon-button" type="button" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 7v5h-5M4 17v-5h5M5.6 7a7 7 0 0 1 11.6-1L20 9M4 15l2.8 3A7 7 0 0 0 18.4 17"/></svg></button></header>
     <div id="rows" class="rows"></div>
     <footer><span id="cost"></span><span id="footer"></span></footer>
   </section>
-  <div id="strip" class="strip" aria-label="Codex 会话统计">
-    <div class="model-group" title="拖动统计条以调整位置"><svg class="grip" viewBox="0 0 8 16" aria-hidden="true" focusable="false"><circle cx="2" cy="3" r="1"/><circle cx="6" cy="3" r="1"/><circle cx="2" cy="8" r="1"/><circle cx="6" cy="8" r="1"/><circle cx="2" cy="13" r="1"/><circle cx="6" cy="13" r="1"/></svg><span id="status" class="status-dot"></span><span id="title" class="model-name">等待会话</span><span id="reasoning" class="reasoning-effort" hidden></span></div>
+  <div id="strip" class="strip" aria-label="Codex conversation statistics">
+    <div id="modelGroup" class="model-group" title="Drag to move the strip"><svg class="grip" viewBox="0 0 8 16" aria-hidden="true" focusable="false"><circle cx="2" cy="3" r="1"/><circle cx="6" cy="3" r="1"/><circle cx="2" cy="8" r="1"/><circle cx="6" cy="8" r="1"/><circle cx="2" cy="13" r="1"/><circle cx="6" cy="13" r="1"/></svg><span id="status" class="status-dot"></span><span id="title" class="model-name">Waiting for a conversation</span><span id="reasoning" class="reasoning-effort" hidden></span></div>
     <div id="metrics" class="metrics" aria-live="polite"></div>
     <div class="actions">
-      <button id="dock" class="icon-button" type="button" aria-pressed="true" aria-label="吸附到 Codex 标题栏" title="解除吸附"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 9V4l1-1H7l1 1v5l-3 3v2h14v-2l-3-3ZM12 14v7"/></svg></button>
-      <button id="expand" class="icon-button" type="button" aria-expanded="false" aria-label="展开用量详情" title="展开详情"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 10 5 5 5-5"/></svg></button>
-      <button id="fold" class="icon-button" type="button" aria-label="向右收起统计条" title="向右收起"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 6 6 6-6 6"/></svg></button>
+      <button id="dock" class="icon-button" type="button" aria-pressed="true" aria-label="Center in the Codex titlebar" title="Detach"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 9V4l1-1H7l1 1v5l-3 3v2h14v-2l-3-3ZM12 14v7"/></svg></button>
+      <button id="expand" class="icon-button" type="button" aria-expanded="false" aria-label="Expand usage details" title="Expand usage details"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 10 5 5 5-5"/></svg></button>
+      <button id="fold" class="icon-button" type="button" aria-label="Fold strip to the right" title="Fold strip to the right"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 6 6 6-6 6"/></svg></button>
     </div>
   </div>
-  <button id="restore" class="icon-button restore-button" type="button" aria-label="展开统计条" title="展开统计条" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 6-6 6 6 6"/></svg></button>
+  <button id="restore" class="icon-button restore-button" type="button" aria-label="Expand statistics strip" title="Expand statistics strip" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 6-6 6 6 6"/></svg></button>
 </main>
+<script src="../i18n.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

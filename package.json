@@ -35,15 +35,6 @@
     "url": "https://github.com/fazer-y/codex-usage-monitor/issues"
   },
   "homepage": "https://github.com/fazer-y/codex-usage-monitor#readme",
-  "files": [
-    "desktop/",
-    "docs/",
-    "lib/",
-    "README.md",
-    "README.zh-CN.md",
-    "LICENSE",
-    "CHANGELOG.md"
-  ],
   "devDependencies": {
     "electron": "^42.5.1",
     "electron-builder": "^26.15.3"

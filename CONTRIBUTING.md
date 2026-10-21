@@ -12,7 +12,7 @@ npm run desktop:dist
 ```
 
 `desktop:package` creates an unpacked app. `desktop:dist` creates the Windows
-ZIP and installer in `dist/desktop`.
+one-click Windows installer in `dist/desktop`.
 
 ## Code and documentation
 
@@ -29,9 +29,9 @@ changes with behavioral tests. Use synthetic fixtures. Check the packaged app
 for docking, conversation changes, live values, responsive layout, and detail
 controls.
 
-When updating prices, change `lib/pricing.js`, its verification date, the pricing
-tests, and `docs/PRICING.md`. Keep cache reads, cache writes, and per-request
-long-context tiers separate.
+When changing the price parser, check it against the official pricing page and
+update `lib/prices.json`. Cover cache reads, cache writes, conditional requests,
+offline startup, and per-request long-context tiers.
 
 Before releasing, run the tests, build the Windows artifacts, update the
-changelog, and publish the ZIP, installer, and SHA-256 checksums.
+changelog, and publish the installer and SHA-256 checksums.

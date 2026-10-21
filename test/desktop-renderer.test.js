@@ -50,14 +50,16 @@ test('renderer updates values and supports details, docking and reversible foldi
   };
   const source = fs.readFileSync(path.join(root, 'desktop/renderer/app.js'), 'utf8');
   vm.runInNewContext(source, {
-    window: { codexUsageMonitor: bridge },
+    window: { codexUsageMonitor: bridge, codexUsageI18n: require('../desktop/i18n') },
     document: { documentElement: documentRoot, getElementById: id => elements.get(id), createElement: () => new Element() },
   });
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(elements.get('panel').dataset.detailsBelow, 'true');
-  updateTheme({ mode: 'dark', colors: { surface: '#181818', text: '#ffffff', accent: '#339cff' } });
+  updateTheme({ mode: 'dark', locale: 'zh-CN', colors: { surfaceFill: '#181818', text: '#ffffff', accent: '#339cff' } });
   assert.equal(documentRoot.style.colorScheme, 'dark');
-  assert.equal(rootStyle.get('--surface'), '#181818');
+  assert.equal(documentRoot.lang, 'zh-CN');
+  assert.equal(elements.get('fold').getAttribute('aria-label'), '向右收起统计条');
+  assert.equal(rootStyle.get('--surface-fill'), '#181818');
   assert.equal(rootStyle.get('--text'), '#ffffff');
   const firstModel = { status: 'ready', title: 'GPT-6.1 Sol', subtitle: 'max', metrics: [{ kind: 'cache', label: '缓存', value: '91%' }],
     rows: [{ label: 'Test', value: '<script>untrusted</script>' }] };
@@ -106,5 +108,10 @@ test('renderer updates values and supports details, docking and reversible foldi
   assert.equal(elements.get('details').hidden, true);
   assert.equal(elements.get('expand').getAttribute('aria-expanded'), 'false');
   assert.deepEqual(actions, [['expanded', true], ['docked', true], ['folded', true], ['folded', false], ['expanded', true]]);
+  updateTheme({ mode: 'light', locale: 'en-US', colors: { surfaceFill: '#ffffff' } });
+  assert.equal(documentRoot.lang, 'en');
+  assert.equal(elements.get('restore').getAttribute('aria-label'), 'Expand statistics strip');
+  assert.equal(elements.get('expand').getAttribute('aria-label'), 'Expand usage details');
+  assert.equal(elements.get('fold').getAttribute('aria-label'), 'Fold strip to the right');
   assert.doesNotMatch(source, /innerHTML/);
 });

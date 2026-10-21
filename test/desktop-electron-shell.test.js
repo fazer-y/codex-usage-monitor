@@ -36,8 +36,8 @@ test('desktop packaging config includes Windows targets and local files', () => 
   assert.equal(config.appId, 'dev.codex-usage-monitor.desktop');
   assert.equal(config.extraMetadata.main, 'desktop/main.js');
   assert.equal(config.win.signExecutable, false);
-  assert.deepEqual(config.win.target, ['nsis', 'zip']);
-  assert.equal(config.nsis.allowToChangeInstallationDirectory, true);
+  assert.deepEqual(config.win.target, ['nsis']);
+  assert.equal(config.nsis.oneClick, true);
   assert.equal(config.files.includes('desktop/**/*'), true);
   assert.equal(config.files.includes('lib/**/*'), true);
 });

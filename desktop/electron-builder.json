@@ -12,8 +12,6 @@
     "desktop/**/*",
     "!desktop/build-native.js",
     "!desktop/electron-builder.json",
-    "!desktop/Connect-Codex.cmd",
-    "!desktop/Disconnect-Codex.cmd",
     "!desktop/installer.nsh",
     "!desktop/native/WindowObserver.cs",
     "!desktop/assets/icon.ico",
@@ -26,21 +24,19 @@
     { "from": "LICENSE", "to": "LICENSE.txt" },
     { "from": "plugin.json", "to": "plugin.json" },
     { "from": "mcp.json", "to": "mcp.json" },
-    { "from": ".codex-plugin", "to": ".codex-plugin" },
-    { "from": "desktop/Connect-Codex.cmd", "to": "Connect-Codex.cmd" },
-    { "from": "desktop/Disconnect-Codex.cmd", "to": "Disconnect-Codex.cmd" }
+    { "from": ".codex-plugin", "to": ".codex-plugin" }
   ],
   "win": {
     "icon": "desktop/assets/icon.ico",
     "signExecutable": false,
     "artifactName": "codex-usage-monitor-windows-${arch}.${ext}",
-    "target": ["nsis", "zip"]
+    "target": ["nsis"]
   },
   "nsis": {
     "include": "desktop/installer.nsh",
-    "oneClick": false,
+    "oneClick": true,
     "perMachine": false,
-    "allowToChangeInstallationDirectory": true,
+    "runAfterFinish": false,
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
     "artifactName": "codex-usage-monitor-setup-windows-${arch}.${ext}"

@@ -1,15 +1,18 @@
 'use strict';
 
 const { formatTokens, formatUsd } = require('../lib/format');
-const { modelInfo } = require('../lib/pricing');
+const { ratesForModel, pricingMetadata } = require('../lib/pricing');
+const { translator, resolveLocale } = require('./i18n');
 
-function snapshotToViewModel(snapshot, now = Date.now()) {
-  const trackingLabel = snapshot?.selection?.mode === 'desktop' ? '跟随 Codex 当前会话' : '最近活动会话';
+function snapshotToViewModel(snapshot, now = Date.now(), locale = 'en') {
+  locale = resolveLocale(locale);
+  const t = translator(locale);
+  const trackingLabel = t(snapshot?.selection?.mode === 'desktop' ? 'followCurrent' : 'recentActivity');
   if (!snapshot || snapshot.status !== 'ready' || !snapshot.summary) {
     return {
-      status: snapshot?.status || 'waiting', title: '等待会话', subtitle: '', conversationTitle: snapshot?.conversationTitle || '',
-      metrics: [], rows: snapshot?.message ? [{ label: '状态', value: snapshot.message }] : [], cost: '',
-      footer: '读取本地会话统计', trackingLabel, generatedAt: snapshot?.generatedAt,
+      locale, status: snapshot?.status || 'waiting', title: t('waiting'), subtitle: '', conversationTitle: snapshot?.conversationTitle || '',
+      metrics: [], rows: snapshot?.message ? [{ label: t('status'), value: snapshot.reason ? t(snapshot.reason) : snapshot.message }] : [], cost: '',
+      footer: t('readLocal'), trackingLabel, generatedAt: snapshot?.generatedAt,
     };
   }
 
@@ -20,56 +23,54 @@ function snapshotToViewModel(snapshot, now = Date.now()) {
   const cost = summary.cost;
   const amount = cost?.usd ?? (cost?.knownUsd > 0 ? cost.knownUsd : null);
   const price = amount != null ? (cost.complete ? '' : '≥') + formatUsd(amount) : '—';
-  const info = modelInfo(summary.model);
-  const multiplier = info?.long && summary.latestUsage.inputTokens > 272000 ? 2 : 1;
-  const outputMultiplier = multiplier === 2 ? 1.5 : 1;
+  const rates = ratesForModel(summary.model, summary.latestUsage.inputTokens);
   const outputSpeed = turn?.generation?.outputTokens > 0 && turn.generation.durationMs > 0
     ? turn.generation.outputTokens / (turn.generation.durationMs / 1000) : null;
   const speed = outputSpeed == null ? '—' : outputSpeed.toFixed(1) + ' token/s';
-  const speedDescription = '按模型请求区间估算，剔除工具等待；Token 包含思考，耗时包含网络、排队和预填充';
+  const speedDescription = t('speedDescription');
   const rows = [
-    { label: '模型', value: [summary.modelName, summary.reasoningEffort, summary.planType].filter(Boolean).join(' · ') },
-    { label: '本轮', value: (turn?.steps ?? 0) + ' 步 · ' + (turn?.toolCalls ?? 0) + ' 次工具调用 · ' + formatDuration(elapsed) },
-    { label: '本轮 Token', value: formatTokens(turn?.usage?.inputTokens || 0) + ' 输入 · ' + formatTokens(turn?.usage?.outputTokens || 0) + ' 输出' },
-    { label: '会话 Token', value: formatTokens(total.inputTokens) + ' 输入 · ' + formatTokens(total.outputTokens) + ' 输出 · ' + summary.turnCount + ' 轮' },
-    { label: '缓存读取', value: formatTokens(total.cachedInputTokens) + ' Token · 命中率 ' + percent(total.cacheHitPercent) },
-    { label: '请求 / 工具', value: summary.requestCount + ' 次请求 · ' + (summary.toolCallCount || 0) + ' 次工具调用' },
+    { label: t('model'), value: [summary.modelName, summary.reasoningEffort, summary.planType].filter(Boolean).join(' · ') },
+    { label: t('currentTurn'), value: t('turnSummary', { steps: turn?.steps ?? 0, tools: turn?.toolCalls ?? 0, elapsed: formatDuration(elapsed) }) },
+    { label: t('turnTokens'), value: t('tokenPair', { input: formatTokens(turn?.usage?.inputTokens || 0), output: formatTokens(turn?.usage?.outputTokens || 0) }) },
+    { label: t('sessionTokens'), value: t('sessionTokenPair', { input: formatTokens(total.inputTokens), output: formatTokens(total.outputTokens), turns: summary.turnCount }) },
+    { label: t('cacheRead'), value: t('cacheSummary', { tokens: formatTokens(total.cachedInputTokens), percent: percent(total.cacheHitPercent) }) },
+    { label: t('requestsTools'), value: t('requestSummary', { requests: summary.requestCount, tools: summary.toolCallCount || 0 }) },
   ];
-  if (turn?.timeToFirstTokenMs != null) rows.push({ label: '首响应', value: formatDuration(turn.timeToFirstTokenMs) });
+  if (turn?.timeToFirstTokenMs != null) rows.push({ label: t('firstResponse'), value: formatDuration(turn.timeToFirstTokenMs) });
   if (outputSpeed != null) {
-    rows.push({ label: '吞吐', value: speed + ' · ' + turn.generation.requestCount + ' 次模型请求' });
-    rows.push({ label: '计时口径', value: speedDescription });
+    rows.push({ label: t('speed'), value: t('speedRequests', { speed, requests: turn.generation.requestCount }) });
+    rows.push({ label: t('timingBasis'), value: speedDescription });
   }
-  if (turn?.toolCalls) rows.push({ label: '工具累计耗时', value: formatDuration(turn.toolDurationMs) });
-  if (info) rows.push({ label: '本次请求单价', value: '输入 $' + info.input * multiplier + ' · 缓存读取 $' + info.cachedInput * multiplier
-    + ' · 输出 $' + info.output * outputMultiplier + ' / 百万 Token' });
+  if (turn?.toolCalls) rows.push({ label: t('toolDuration'), value: formatDuration(turn.toolDurationMs) });
+  if (rates) rows.push({ label: t('requestRates'), value: t('rateSummary', {
+    input: rates.input, cached: rates.cachedInput == null ? '—' : '$' + rates.cachedInput, output: rates.output }) });
   if (cost?.breakdown && amount != null) {
     const parts = cost.breakdown;
-    rows.push({ label: '费用明细', value: '输入 ' + formatUsd(parts.input) + ' · 缓存读取 ' + formatUsd(parts.cachedInput)
-      + ' · 缓存写入 ' + formatUsd(parts.cacheWrite) + ' · 输出 ' + formatUsd(parts.output) });
-    rows.push({ label: '缓存节省', value: formatUsd(parts.cacheSavings) });
+    rows.push({ label: t('costBreakdown'), value: t('costSummary', { input: formatUsd(parts.input), cached: formatUsd(parts.cachedInput),
+      writes: formatUsd(parts.cacheWrite), output: formatUsd(parts.output) }) });
+    rows.push({ label: t('cacheSavings'), value: formatUsd(parts.cacheSavings) });
   }
   const limits = [summary.rateLimits?.primary, summary.rateLimits?.secondary].filter(Boolean);
-  if (limits.length) rows.push({ label: '额度已用', value: limits.map(limit => limit.label + ' ' + percent(limit.usedPercent)).join(' · ') });
+  if (limits.length) rows.push({ label: t('quotaUsed'), value: limits.map(limit => limit.label + ' ' + percent(limit.usedPercent)).join(' · ') });
 
   return {
-    status: 'ready', title: summary.modelName || summary.model || 'Codex', subtitle: summary.reasoningEffort || '',
-    conversationTitle: snapshot.conversationTitle || '当前会话', trackingLabel,
+    locale, status: 'ready', title: summary.modelName || summary.model || 'Codex', subtitle: summary.reasoningEffort || '',
+    conversationTitle: snapshot.conversationTitle || t('currentConversation'), trackingLabel,
     metrics: [
-      metric('speed', '吞吐', speed, null, speedDescription),
-      metric('cache', '缓存', percent(total.cacheHitPercent), total.cacheHitPercent, '会话缓存读取 Token / 会话输入 Token'),
-      metric('context', '上下文', percent(summary.contextUsedPercent), summary.contextUsedPercent, '最近一次请求输入 / 模型上下文窗口'),
-      metric('tokens', 'Token', formatTokens(total.totalTokens), null, '会话累计输入和输出 Token'),
-      metric('steps', '', '第' + (turn?.steps ?? 0) + '步', null, '当前轮模型请求次数'),
-      metric('turns', '', '第' + summary.turnCount + '轮', null, '会话累计轮数'),
-      metric('tools', '工具', String(turn?.toolCalls ?? 0) + '次', null, '当前轮工具调用次数'),
-      metric('elapsed', '耗时', formatDuration(elapsed), null, '当前轮总耗时'),
-      ...(turn?.timeToFirstTokenMs != null ? [metric('ttft', '首响应', formatDuration(turn.timeToFirstTokenMs), null, '日志记录的首个 Token 延迟')] : []),
-      metric('output', '本轮输出', formatTokens(turn?.usage?.outputTokens || 0), null, '当前轮累计输出 Token'),
-      metric('cost', 'API≈', price, null, '按公开 API Standard Token 价目表估算'),
+      metric('speed', t('speed'), speed, null, speedDescription),
+      metric('cache', t('cache'), percent(total.cacheHitPercent), total.cacheHitPercent, t('cacheDescription')),
+      metric('context', t('context'), percent(summary.contextUsedPercent), summary.contextUsedPercent, t('contextDescription')),
+      metric('tokens', 'Token', formatTokens(total.totalTokens), null, t('tokensDescription')),
+      metric('steps', '', t('stepNumber', { value: turn?.steps ?? 0 }), null, t('stepsDescription')),
+      metric('turns', '', t('turnNumber', { value: summary.turnCount }), null, t('turnsDescription')),
+      metric('tools', t('tools'), t('toolCount', { value: turn?.toolCalls ?? 0 }), null, t('toolsDescription')),
+      metric('elapsed', t('elapsed'), formatDuration(elapsed), null, t('elapsedDescription')),
+      ...(turn?.timeToFirstTokenMs != null ? [metric('ttft', t('firstResponse'), formatDuration(turn.timeToFirstTokenMs), null, t('firstResponseDescription'))] : []),
+      metric('output', t('turnOutput'), formatTokens(turn?.usage?.outputTokens || 0), null, t('outputDescription')),
+      metric('cost', 'API', price, null, t('costDescription')),
     ],
-    rows, cost: 'API 等价估算 ' + price,
-    footer: trackingLabel + ' · API Standard · 价目表 ' + (cost?.verifiedAt || '2026-10-21'),
+    rows, cost: t('costEstimate', { price }),
+    footer: trackingLabel + ' · API Standard · ' + t('priceTable') + ' ' + (cost?.verifiedAt || pricingMetadata().verifiedAt),
     generatedAt: snapshot.generatedAt,
   };
 }

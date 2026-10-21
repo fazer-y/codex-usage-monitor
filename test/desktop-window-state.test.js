@@ -68,6 +68,8 @@ async function createHarness(saved = {}, argv = []) {
     './detail-auto-collapse': { createDetailAutoCollapse: () => ({ setFocused() {}, setExpanded: value => detailStates.push(value), close() {} }) },
     './managed-lifecycle': { createManagedLifecycle: () => ({ setManaged() {}, setHostPresent() {}, setConnections() {}, close() {} }) },
     './monitor-bridge': { monitorAddress() {}, createMonitorBridge() {} },
+    './pricing-updater': { createStartupPricing: () => ({ load: async () => false, refresh: async () => ({ updated: false }), close() {} }) },
+    './i18n': require('../desktop/i18n'),
     './docking': require('../desktop/docking'),
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../desktop/main.js'), 'utf8'), {

@@ -65,8 +65,8 @@ test('local bridge shares fresh snapshots and tracks independent MCP connections
 });
 
 test('Windows bridge addresses share the user profile without exposing its path', () => {
-  const first = monitorAddress('C:/Users/Example/AppData/Roaming/Codex Usage Monitor', 'win32');
-  const second = monitorAddress('c:/users/example/appdata/roaming/codex usage monitor', 'win32');
+  const first = monitorAddress('./Example/Profile/Codex Usage Monitor', 'win32');
+  const second = monitorAddress('./example/profile/codex usage monitor', 'win32');
   assert.equal(first, second);
   assert.ok(first.startsWith('\\\\.\\pipe\\codex-usage-monitor-'));
   assert.doesNotMatch(first, /Example|AppData/);
