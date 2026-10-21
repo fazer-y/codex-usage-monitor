@@ -1,0 +1,11 @@
+{
+  "name": "codex-usage-monitor",
+  "version": "0.2.1",
+  "description": "Live desktop statistics for the current Codex conversation.",
+  "mcpServers": "./mcp.json",
+  "requires_local_executor": true,
+  "interface": {
+    "displayName": "Codex Usage Monitor",
+    "shortDescription": "Live conversation statistics in a compact desktop strip."
+  }
+}

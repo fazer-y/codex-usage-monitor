@@ -1,7 +1,8 @@
 'use strict';
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { dockBounds, snapPlacement, expandedBounds, DEFAULT_PLACEMENT, STRIP_MAX_WIDTH } = require('../desktop/docking');
+const { dockBounds, snapPlacement, expandedBounds, foldedBounds, titlebarSpace, DEFAULT_PLACEMENT,
+  STRIP_MAX_WIDTH, FOLDED_WIDTH } = require('../desktop/docking');
 
 const work = { x: 0, y: 0, width: 1600, height: 1000 };
 const host = { x: 100, y: 100, width: 1000, height: 600 };
@@ -94,4 +95,32 @@ test('bottom expansion grows upward and shallow displays retain the strip anchor
   assert.equal(flipped.bounds.y, 0);
   assert.equal(flipped.bounds.y + flipped.bounds.height, nearBottom.y + nearBottom.height);
   assert.deepEqual(DEFAULT_PLACEMENT, { edge: 'top', side: 'inside', align: 'center', offset: 0 });
+});
+
+test('folded titlebar handle moves to the right beyond the centered content limit', () => {
+  const display = { x: 0, y: 0, width: 3000, height: 1600 };
+  const wide = { x: 100, y: 100, width: 2400, height: 1000 };
+  const strip = dockBounds(wide, { ...size, width: STRIP_MAX_WIDTH }, display);
+  const folded = foldedBounds(strip, display, titlebarSpace(wide).right);
+  assert.equal(folded.width, FOLDED_WIDTH);
+  assert.equal(folded.x + folded.width, wide.x + wide.width - 140);
+  assert.ok(folded.x > strip.x + strip.width);
+  assert.equal(folded.y, strip.y);
+  assert.equal(folded.height, size.height);
+  assert.equal(strip.width, STRIP_MAX_WIDTH);
+});
+
+test('floating fold preserves the original right edge and full strip bounds', () => {
+  const strip = { x: 250, y: 350, width: 760, height: 40 };
+  assert.deepEqual(foldedBounds(strip, work), { x: 978, y: 350, width: FOLDED_WIDTH, height: 40 });
+  assert.deepEqual(expandedBounds(strip, false, work, true).bounds, strip);
+});
+
+test('folded handles remain accessible on negative monitors and partially offscreen hosts', () => {
+  const display = { x: -1600, y: -1000, width: 1600, height: 1000 };
+  const strip = { x: -1260, y: -996, width: 1120, height: 40 };
+  assert.deepEqual(foldedBounds(strip, display), { x: -172, y: -996, width: FOLDED_WIDTH, height: 40 });
+  const clamped = foldedBounds({ ...strip, y: -1100 }, display, 600);
+  assert.equal(clamped.x + clamped.width, 0);
+  assert.equal(clamped.y, -1000);
 });

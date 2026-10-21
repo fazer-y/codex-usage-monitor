@@ -1,6 +1,6 @@
 {
   "name": "codex-usage-monitor",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Adaptive desktop statistics strip for Codex conversations on Windows",
   "main": "desktop/main.js",
   "type": "commonjs",
@@ -49,6 +49,7 @@
     "electron-builder": "^26.15.3"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
     "smol-toml": "1.9.1"
   },
   "private": true,

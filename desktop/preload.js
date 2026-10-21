@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('codexUsageMonitor', {
   refresh: () => ipcRenderer.invoke('usage:refresh'),
   setExpanded: value => ipcRenderer.invoke('usage:setExpanded', value),
   setDocked: value => ipcRenderer.invoke('usage:setDocked', value),
-  hide: () => ipcRenderer.invoke('usage:hide'),
+  setFolded: value => ipcRenderer.invoke('usage:setFolded', value),
   onTheme: callback => {
     if (typeof callback !== 'function') return () => {};
     const listener = (_event, theme) => callback(theme);

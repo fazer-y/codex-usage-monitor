@@ -15,6 +15,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; overflow: hidden; font: 11px/1.4 "Segoe UI", "Microsoft YaHei UI", sans-serif; color: var(--text); background: transparent; }
 button { font: inherit; }
+[hidden] { display: none !important; }
 .panel { height: calc(100vh - 4px); display: flex; flex-direction: column; margin: 2px; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--surface-fill); box-shadow: 0 1px 3px #2035280c; }
 .strip { flex: 0 0 34px; display: flex; align-items: center; padding: 0 7px; gap: 8px; -webkit-app-region: drag; user-select: none; }
 .model-group { display: flex; align-items: center; gap: 5px; flex: 0 0 auto; white-space: nowrap; }
@@ -40,6 +41,8 @@ button { font: inherit; }
 .panel[data-details-below="false"] #expand[aria-expanded="true"] svg { transform: none; }
 .icon-button:hover { background: var(--hover); color: var(--text); }
 .icon-button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.restore-button { width: 100%; height: 100%; border-radius: 8px; }
+.panel[data-folded="true"] { box-shadow: none; }
 #dock[aria-pressed="true"] { color: var(--accent-text); }
 .details { flex: 1; min-height: 0; padding: 12px 13px 9px; border-bottom: 1px solid var(--line); overflow-y: auto; user-select: text; }
 .details[hidden] { display: none; }

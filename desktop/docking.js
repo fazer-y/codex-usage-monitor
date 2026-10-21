@@ -3,6 +3,7 @@
 const STRIP_WIDTH = 760;
 const STRIP_MAX_WIDTH = 1280;
 const STRIP_HEIGHT = 40;
+const FOLDED_WIDTH = 32;
 const DETAILS_HEIGHT = 284;
 const SNAP_DISTANCE = 28;
 const TITLEBAR_LEFT = 340;
@@ -84,4 +85,15 @@ function expandedBounds(strip, expanded, workArea, preferBelow) {
   return { bounds: { ...strip, y: detailsBelow ? strip.y : strip.y - added, height: strip.height + added }, detailsBelow };
 }
 
-module.exports = { dockBounds, snapPlacement, expandedBounds, DEFAULT_PLACEMENT, STRIP_WIDTH, STRIP_MAX_WIDTH, STRIP_HEIGHT, DETAILS_HEIGHT };
+function foldedBounds(strip, workArea, rightEdge = strip.x + strip.width) {
+  const width = Math.min(FOLDED_WIDTH, workArea.width);
+  const height = Math.min(strip.height, workArea.height);
+  return {
+    x: Math.round(clamp(rightEdge - width, workArea.x, workArea.x + workArea.width - width)),
+    y: Math.round(clamp(strip.y, workArea.y, workArea.y + workArea.height - height)),
+    width, height,
+  };
+}
+
+module.exports = { dockBounds, snapPlacement, expandedBounds, foldedBounds, titlebarSpace, DEFAULT_PLACEMENT,
+  STRIP_WIDTH, STRIP_MAX_WIDTH, STRIP_HEIGHT, FOLDED_WIDTH, DETAILS_HEIGHT };

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "usage": {
+      "type": "stdio",
+      "command": "./Codex Usage Monitor.exe",
+      "args": ["${PLUGIN_ROOT}/resources/app.asar/desktop/mcp-server.js"],
+      "env": { "ELECTRON_RUN_AS_NODE": "1" }
+    }
+  }
+}

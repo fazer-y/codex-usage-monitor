@@ -25,7 +25,7 @@ test('renderer uses local assets and a constrained content security policy', () 
   assert.doesNotMatch(html, /<script>(.|\n)*<\/script>/);
 });
 
-test('renderer updates values and supports details, docking and hide actions', async () => {
+test('renderer updates values and supports details, docking and reversible folding', async () => {
   const html = fs.readFileSync(path.join(root, 'desktop/renderer/index.html'), 'utf8');
   const elements = new Map([...html.matchAll(/id="([^"]+)"/g)].map(match => [match[1], new Element()]));
   elements.get('details').hidden = true;
@@ -38,7 +38,7 @@ test('renderer updates values and supports details, docking and hide actions', a
   const documentRoot = { style: { setProperty: (key, value) => rootStyle.set(key, value) } };
   const bridge = {
     getSnapshot: async () => null,
-    getWindowState: async () => ({ docked: true, expanded: false, detailsBelow: true }),
+    getWindowState: async () => ({ docked: true, expanded: false, folded: false, detailsBelow: true }),
     getTheme: async () => null,
     onTheme: callback => { updateTheme = callback; },
     onSnapshot: callback => { update = callback; },
@@ -46,7 +46,7 @@ test('renderer updates values and supports details, docking and hide actions', a
     refresh: async () => null,
     setExpanded: async value => { actions.push(['expanded', value]); return { expanded: value }; },
     setDocked: value => actions.push(['docked', value]),
-    hide: () => actions.push(['hide']),
+    setFolded: async value => { actions.push(['folded', value]); return { folded: value, expanded: false }; },
   };
   const source = fs.readFileSync(path.join(root, 'desktop/renderer/app.js'), 'utf8');
   vm.runInNewContext(source, {
@@ -84,7 +84,27 @@ test('renderer updates values and supports details, docking and hide actions', a
   assert.equal(elements.get('details').hidden, true);
   assert.equal(elements.get('expand').getAttribute('aria-expanded'), 'false');
   elements.get('dock').listeners.click();
-  elements.get('hide').listeners.click();
-  assert.deepEqual(actions, [['expanded', true], ['docked', true], ['hide']]);
+  await elements.get('fold').listeners.click();
+  assert.equal(elements.get('strip').hidden, true);
+  assert.equal(elements.get('restore').hidden, false);
+  assert.equal(elements.get('details').hidden, true);
+  assert.equal(elements.get('panel').dataset.folded, 'true');
+  update({ status: 'ready', title: 'GPT-6.1 Sol', subtitle: 'max', metrics: [{ kind: 'cache', label: '缓存', value: '95%' }],
+    rows: [{ label: 'Test', value: 'Updated while folded' }] });
+  assert.equal(elements.get('title').textContent, 'GPT-6 Luna');
+  assert.equal(elements.get('metrics').children[0].children[1].textContent, '82%');
+  await elements.get('restore').listeners.click();
+  assert.equal(elements.get('strip').hidden, false);
+  assert.equal(elements.get('restore').hidden, true);
+  assert.equal(elements.get('panel').dataset.folded, 'false');
+  assert.equal(elements.get('title').textContent, 'GPT-6.1 Sol');
+  assert.equal(elements.get('metrics').children[0].children[1].textContent, '95%');
+  assert.equal(elements.get('details').hidden, true);
+  await elements.get('expand').listeners.click();
+  assert.equal(elements.get('rows').children[0].children[1].textContent, 'Updated while folded');
+  windowState({ folded: true, expanded: true });
+  assert.equal(elements.get('details').hidden, true);
+  assert.equal(elements.get('expand').getAttribute('aria-expanded'), 'false');
+  assert.deepEqual(actions, [['expanded', true], ['docked', true], ['folded', true], ['folded', false], ['expanded', true]]);
   assert.doesNotMatch(source, /innerHTML/);
 });

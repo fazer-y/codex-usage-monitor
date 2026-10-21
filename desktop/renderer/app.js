@@ -9,12 +9,16 @@ const details = document.getElementById('details');
 const expand = document.getElementById('expand');
 const dock = document.getElementById('dock');
 const panel = document.getElementById('panel');
+const strip = document.getElementById('strip');
+const restore = document.getElementById('restore');
+let folded = false;
 let signature = '';
 let latestModel = null;
 let detailsSignature = '';
 
 document.getElementById('refresh').addEventListener('click', () => bridge.refresh().then(render).catch(renderError));
-document.getElementById('hide').addEventListener('click', () => bridge.hide());
+document.getElementById('fold').addEventListener('click', () => bridge.setFolded(true).then(applyWindowState).catch(renderError));
+restore.addEventListener('click', () => bridge.setFolded(false).then(applyWindowState).catch(renderError));
 expand.addEventListener('click', async () => {
   const expanded = details.hidden;
   const state = await bridge.setExpanded(expanded);
@@ -39,16 +43,28 @@ function applyTheme(theme) {
 
 function applyWindowState(state) {
   if (!state) return;
+  if (typeof state.folded === 'boolean') {
+    const wasFolded = folded;
+    folded = state.folded;
+    panel.dataset.folded = String(folded);
+    strip.hidden = folded;
+    restore.hidden = !folded;
+    if (folded) {
+      details.hidden = true;
+      expand.setAttribute('aria-expanded', 'false');
+    } else if (wasFolded && latestModel) renderStrip(latestModel);
+  }
   if (typeof state.docked === 'boolean') {
     dock.setAttribute('aria-pressed', String(state.docked));
     dock.title = state.docked ? '解除吸附' : '居中吸附到 Codex 标题栏';
   }
   if (typeof state.expanded === 'boolean') {
-    details.hidden = !state.expanded;
-    expand.setAttribute('aria-expanded', String(state.expanded));
-    expand.setAttribute('aria-label', state.expanded ? '收起用量详情' : '展开用量详情');
-    expand.title = state.expanded ? '收起详情' : '展开详情';
-    if (state.expanded && latestModel) renderDetails(latestModel);
+    const expanded = state.expanded && !folded;
+    details.hidden = !expanded;
+    expand.setAttribute('aria-expanded', String(expanded));
+    expand.setAttribute('aria-label', expanded ? '收起用量详情' : '展开用量详情');
+    expand.title = expanded ? '收起详情' : '展开详情';
+    if (expanded && latestModel) renderDetails(latestModel);
   }
   if (typeof state.detailsBelow === 'boolean') panel.dataset.detailsBelow = String(state.detailsBelow);
 }
@@ -59,6 +75,12 @@ function render(model) {
   if (next === signature) return;
   signature = next;
   latestModel = model;
+  if (folded) return;
+  renderStrip(model);
+  if (!details.hidden) renderDetails(model);
+}
+
+function renderStrip(model) {
   title.textContent = model.title || '等待会话';
   title.title = [model.title, model.subtitle].filter(Boolean).join(' · ');
   const effort = model.subtitle || '';
@@ -70,7 +92,6 @@ function render(model) {
   status.className = 'status-dot ' + (model.status === 'ready' ? '' : model.status);
   status.title = model.trackingLabel || '正在读取本地用量';
   metrics.replaceChildren(...(model.metrics || []).map(renderMetric));
-  if (!details.hidden) renderDetails(model);
 }
 
 function renderDetails(model) {

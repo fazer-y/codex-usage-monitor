@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "codex-usage-monitor",
+  "version": "0.2.1",
+  "description": "Live desktop statistics for the current Codex conversation.",
+  "author": { "name": "fazer-y" },
+  "repository": "https://github.com/fazer-y/codex-usage-monitor",
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "interface": {
+        "displayName": "Codex Usage Monitor",
+        "shortDescription": "Live conversation statistics in a compact desktop strip.",
+        "category": "Productivity"
+      }
+    }
+  }
+}

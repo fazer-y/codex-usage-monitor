@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.1 - 2026-10-21
+
+- Replace hiding with a small right-side tab that restores the strip in one click.
+- Free the titlebar by shrinking the native window to the tab's bounds.
+- Keep folded tabs attached during window movement, resizing, and minimization.
+- Restore the latest conversation statistics and preserve the full strip position.
+- Skip hidden metric rendering while folded.
+- Add a copyable installation prompt for coding agents to both READMEs.
+- Bundle a local MCP server and a Codex plugin installer that reuses the installed application.
+- Manage strip lifetime through Codex host detection and MCP connections.
+
 ## 0.2.0 - 2026-10-21
 
 - Add a frameless desktop strip with Windows docking and conversation following.

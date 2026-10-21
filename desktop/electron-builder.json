@@ -12,6 +12,9 @@
     "desktop/**/*",
     "!desktop/build-native.js",
     "!desktop/electron-builder.json",
+    "!desktop/Connect-Codex.cmd",
+    "!desktop/Disconnect-Codex.cmd",
+    "!desktop/installer.nsh",
     "!desktop/native/WindowObserver.cs",
     "!desktop/assets/icon.ico",
     "lib/**/*",
@@ -20,7 +23,12 @@
   "extraFiles": [
     { "from": "README.md", "to": "README.md" },
     { "from": "README.zh-CN.md", "to": "README.zh-CN.md" },
-    { "from": "LICENSE", "to": "LICENSE.txt" }
+    { "from": "LICENSE", "to": "LICENSE.txt" },
+    { "from": "plugin.json", "to": "plugin.json" },
+    { "from": "mcp.json", "to": "mcp.json" },
+    { "from": ".codex-plugin", "to": ".codex-plugin" },
+    { "from": "desktop/Connect-Codex.cmd", "to": "Connect-Codex.cmd" },
+    { "from": "desktop/Disconnect-Codex.cmd", "to": "Disconnect-Codex.cmd" }
   ],
   "win": {
     "icon": "desktop/assets/icon.ico",
@@ -29,6 +37,7 @@
     "target": ["nsis", "zip"]
   },
   "nsis": {
+    "include": "desktop/installer.nsh",
     "oneClick": false,
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
