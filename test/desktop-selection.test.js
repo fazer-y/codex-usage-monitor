@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { CodexSelection, selectionFromLine } = require('../desktop/codex-selection');
+const { CodexSelection, selectionFromLine, defaultLogsRoots } = require('../desktop/codex-selection');
 const { createUsageService } = require('../desktop/usage-service');
 const { DatabaseSync } = require('node:sqlite');
 
@@ -49,6 +49,33 @@ test('desktop selection tails completed log lines and resets when the host chang
   assert.equal((await selection.poll()).id, idB);
   selection.setHostPid(456);
   assert.equal(await selection.poll(), null);
+});
+
+test('log discovery includes Windows Store cache folders without fixed user paths', t => {
+  const local = temp(t);
+  fs.mkdirSync(path.join(local, 'Packages', 'OpenAI.Codex_example'), { recursive: true });
+  fs.mkdirSync(path.join(local, 'Packages', 'Other.App_example'), { recursive: true });
+  assert.deepEqual(defaultLogsRoots(local), [path.join(local, 'Codex', 'Logs'),
+    path.join(local, 'Packages', 'OpenAI.Codex_example', 'LocalCache', 'Local', 'Codex', 'Logs')]);
+});
+
+test('desktop selection uses the active Store log when an ordinary log is stale', async t => {
+  const root = temp(t);
+  const ordinary = path.join(root, 'ordinary');
+  const packaged = path.join(root, 'packaged');
+  for (const folder of [ordinary, packaged]) fs.mkdirSync(folder);
+  const name = 'codex-desktop-test-123-t0-i1-120000-0.log';
+  const oldFile = path.join(ordinary, name);
+  const activeFile = path.join(packaged, name);
+  fs.writeFileSync(oldFile, viewLine(idA));
+  fs.writeFileSync(activeFile, viewLine(idB, '2026-10-21T12:00:05.000Z'));
+  fs.utimesSync(oldFile, new Date('2026-10-21T11:00:00Z'), new Date('2026-10-21T11:00:00Z'));
+  const selection = new CodexSelection({ logsRoots: [ordinary, packaged] });
+  selection.setHostPid(123);
+  assert.equal((await selection.poll()).id, idB);
+  assert.equal(selection.file, activeFile);
+  fs.appendFileSync(activeFile, viewLine(idA, '2026-10-21T12:00:10.000Z'));
+  assert.equal((await selection.poll()).id, idA);
 });
 
 test('selected desktop conversations stay selected while other logs are written', async t => {

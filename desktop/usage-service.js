@@ -59,7 +59,7 @@ function createUsageService(options = {}) {
     },
     start(listener) {
       notify = listener;
-      for (const root of [codexHome, selection.logsRoot].filter(Boolean)) {
+      for (const root of new Set([codexHome, ...(selection.logsRoots || [selection.logsRoot])].filter(Boolean))) {
         try {
           const watcher = fs.watch(root, { recursive: true }, (_event, filename) => {
             const file = filename?.toString() || '';

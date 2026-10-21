@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs/promises');
+const { readdirSync } = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
@@ -18,8 +19,9 @@ function selectionFromLine(line) {
 }
 
 class CodexSelection {
-  constructor({ logsRoot = path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'Codex', 'Logs') } = {}) {
-    this.logsRoot = logsRoot;
+  constructor({ logsRoot, logsRoots = logsRoot ? [logsRoot] : defaultLogsRoots() } = {}) {
+    this.logsRoots = logsRoots;
+    this.logsRoot = logsRoots[0];
     this.pid = null;
     this.selected = null;
     this.file = null;
@@ -47,13 +49,15 @@ class CodexSelection {
       for (const entry of entries) {
         const full = path.join(directory, entry.name);
         if (entry.isDirectory() && depth < 3 && /^\d+$/.test(entry.name)) await walk(full, depth + 1);
-        else if (entry.isFile() && entry.name.includes(`-${this.pid}-t0-`) && entry.name.endsWith('.log')) matches.push(full);
+        else if (entry.isFile() && entry.name.includes(`-${this.pid}-t0-`) && entry.name.endsWith('.log')) {
+          try { matches.push({ file: full, modified: (await fs.stat(full)).mtimeMs }); } catch {}
+        }
       }
     };
-    await walk(this.logsRoot, 0);
-    matches.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
-    if (matches[0] && matches[0] !== this.file) {
-      this.file = matches[0];
+    await Promise.all(this.logsRoots.map(root => walk(root, 0)));
+    matches.sort((a, b) => b.modified - a.modified || b.file.localeCompare(a.file, undefined, { numeric: true }));
+    if (matches[0] && matches[0].file !== this.file) {
+      this.file = matches[0].file;
       this.offset = 0;
       this.pending = '';
     }
@@ -92,4 +96,15 @@ class CodexSelection {
   }
 }
 
-module.exports = { CodexSelection, selectionFromLine };
+function defaultLogsRoots(local = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local')) {
+  const roots = [path.join(local, 'Codex', 'Logs')];
+  const packages = path.join(local, 'Packages');
+  try {
+    for (const name of readdirSync(packages)) {
+      if (/^OpenAI\.Codex_/i.test(name)) roots.push(path.join(packages, name, 'LocalCache', 'Local', 'Codex', 'Logs'));
+    }
+  } catch { /* Unpackaged installations use the ordinary local data folder. */ }
+  return roots;
+}
+
+module.exports = { CodexSelection, selectionFromLine, defaultLogsRoots };

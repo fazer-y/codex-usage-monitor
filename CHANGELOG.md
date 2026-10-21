@@ -16,6 +16,7 @@
 - Remove manual setup wrappers and the unused full-file CLI parser.
 - Follow Codex's language setting for the strip, details, controls, and tray menu.
 - Adapt metric visibility to available space across supported UI languages.
+- Find conversation-selection logs in both ordinary and Windows Store data folders.
 
 ## 0.2.0 - 2026-10-21
 
