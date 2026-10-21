@@ -1,4 +1,5 @@
 node_modules/
+desktop/native/bin/
 .worktrees/
 npm-debug.log*
 coverage/
@@ -10,3 +11,8 @@ Thumbs.db
 *.sqlite-shm
 *.sqlite-wal
 .env
+
+AGENTS.md
+docs/DESKTOP.md
+.codex/
+.local/

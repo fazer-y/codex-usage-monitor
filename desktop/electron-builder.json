@@ -7,22 +7,33 @@
   "extraMetadata": {
     "main": "desktop/main.js"
   },
+  "asarUnpack": ["desktop/native/bin/**/*"],
   "files": [
     "desktop/**/*",
+    "!desktop/build-native.js",
+    "!desktop/electron-builder.json",
+    "!desktop/native/WindowObserver.cs",
+    "!desktop/assets/icon.ico",
     "lib/**/*",
-    "package.json",
-    "README.md",
-    "LICENSE"
+    "package.json"
+  ],
+  "extraFiles": [
+    { "from": "README.md", "to": "README.md" },
+    { "from": "README.zh-CN.md", "to": "README.zh-CN.md" },
+    { "from": "LICENSE", "to": "LICENSE.txt" }
   ],
   "win": {
-    "signAndEditExecutable": false,
-    "target": ["nsis", "dir"]
+    "icon": "desktop/assets/icon.ico",
+    "signExecutable": false,
+    "artifactName": "codex-usage-monitor-windows-${arch}.${ext}",
+    "target": ["nsis", "zip"]
   },
-  "mac": {
-    "target": ["dmg", "zip"]
-  },
-  "linux": {
-    "target": ["AppImage", "deb"],
-    "category": "Utility"
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "artifactName": "codex-usage-monitor-setup-windows-${arch}.${ext}"
   }
 }

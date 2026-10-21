@@ -1,32 +1,37 @@
 # Contributing
 
-## Development
+Use Node.js 24 and Windows for desktop development. The build compiles the
+window observer with the system .NET Framework compiler.
 
-This project intentionally has no runtime dependencies.
-
-```bash
+```powershell
+npm ci
 npm test
-node bin/codex-usage-monitor.js statusline --file test/fixtures/session-basic.jsonl --ascii --no-color
-node bin/codex-usage-monitor.js summary --file test/fixtures/session-basic.jsonl --ascii --no-color
+npm run desktop -- --show
+npm run desktop:package
+npm run desktop:dist
 ```
 
-## Pricing Updates
+`desktop:package` creates an unpacked app. `desktop:dist` creates the Windows
+ZIP and installer in `dist/desktop`.
 
-When OpenAI changes model pricing:
+## Code and documentation
 
-1. Update `lib/pricing.js`.
-2. Add or update tests in `test/pricing.test.js`.
-3. Update the pricing snapshot date in `README.md` and `lib/pricing.js`.
-4. Run `npm test`.
+- Write comments, documentation strings, identifiers, and diagnostics in English.
+- Keep the English and Chinese READMEs synchronized.
+- Write README text for users: functions, behavior, installation, and controls.
+- Use short statements and concrete examples. Keep implementation notes in `docs/`.
+- Preserve upstream attribution and the MIT license.
 
-## Data Shape Changes
+## Changes and verification
 
-If Codex changes session JSONL fields, add the smallest fixture that reproduces
-the new shape before changing `lib/session.js`.
+Keep changes focused and cover accounting, file updates, timing, or selection
+changes with behavioral tests. Use synthetic fixtures. Check the packaged app
+for docking, conversation changes, live values, responsive layout, and detail
+controls.
 
-## Release Checklist
+When updating prices, change `lib/pricing.js`, its verification date, the pricing
+tests, and `docs/PRICING.md`. Keep cache reads, cache writes, and per-request
+long-context tiers separate.
 
-1. `npm test`
-2. `node bin/codex-usage-monitor.js doctor`
-3. Update `CHANGELOG.md`
-4. Tag the release
+Before releasing, run the tests, build the Windows artifacts, update the
+changelog, and publish the ZIP, installer, and SHA-256 checksums.

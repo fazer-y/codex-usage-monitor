@@ -1,57 +1,58 @@
 {
   "name": "codex-usage-monitor",
-  "version": "0.1.0",
-  "description": "Codex CLI plugin and local monitor for usage, model, reasoning effort, context, cache hits, and API-equivalent cost",
-  "main": "bin/codex-usage-monitor.js",
-  "bin": {
-    "codex-usage-monitor": "bin/codex-usage-monitor.js",
-    "cum": "bin/codex-usage-monitor.js"
-  },
+  "version": "0.2.0",
+  "description": "Adaptive desktop statistics strip for Codex conversations on Windows",
+  "main": "desktop/main.js",
   "type": "commonjs",
   "scripts": {
     "test": "node --test test/*.test.js",
-    "smoke:statusline": "node bin/codex-usage-monitor.js statusline --file test/fixtures/session-basic.jsonl",
-    "smoke:summary": "node bin/codex-usage-monitor.js summary --file test/fixtures/session-basic.jsonl",
     "desktop": "electron desktop/main.js",
+    "predesktop": "node desktop/build-native.js",
+    "predesktop:package": "node desktop/build-native.js",
+    "predesktop:dist": "node desktop/build-native.js",
     "desktop:package": "electron-builder --dir --config desktop/electron-builder.json",
-    "desktop:dist": "electron-builder --config desktop/electron-builder.json"
+    "desktop:dist": "electron-builder --config desktop/electron-builder.json --publish never"
   },
   "keywords": [
     "codex",
-    "codex-cli",
-    "plugin",
-    "hooks",
+    "desktop",
+    "windows",
     "usage",
     "tokens",
-    "pricing",
-    "cache"
+    "cache",
+    "throughput"
   ],
-  "author": "harveyxiacn (https://github.com/harveyxiacn)",
+  "author": "fazer-y",
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/harveyxiacn/codex-usage-monitor.git"
+    "url": "git+https://github.com/fazer-y/codex-usage-monitor.git"
   },
   "bugs": {
-    "url": "https://github.com/harveyxiacn/codex-usage-monitor/issues"
+    "url": "https://github.com/fazer-y/codex-usage-monitor/issues"
   },
-  "homepage": "https://github.com/harveyxiacn/codex-usage-monitor#readme",
+  "homepage": "https://github.com/fazer-y/codex-usage-monitor#readme",
   "files": [
-    ".codex-plugin/",
-    "bin/",
     "desktop/",
     "docs/",
-    "hooks/",
     "lib/",
     "README.md",
+    "README.zh-CN.md",
     "LICENSE",
     "CHANGELOG.md"
   ],
   "devDependencies": {
     "electron": "^42.5.1",
     "electron-builder": "^26.15.3"
-  }
+  },
+  "dependencies": {
+    "smol-toml": "1.9.1"
+  },
+  "private": true,
+  "contributors": [
+    "harveyxiacn"
+  ]
 }

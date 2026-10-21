@@ -30,15 +30,14 @@ test('preload exposes only the usage monitor IPC bridge', () => {
   assert.doesNotMatch(source, /require\('node:fs'\)/);
 });
 
-test('desktop packaging config includes platform targets and local files', () => {
+test('desktop packaging config includes Windows targets and local files', () => {
   const config = JSON.parse(read('desktop/electron-builder.json'));
 
   assert.equal(config.appId, 'dev.codex-usage-monitor.desktop');
   assert.equal(config.extraMetadata.main, 'desktop/main.js');
-  assert.equal(config.win.signAndEditExecutable, false);
-  assert.deepEqual(config.win.target, ['nsis', 'dir']);
-  assert.deepEqual(config.mac.target, ['dmg', 'zip']);
-  assert.deepEqual(config.linux.target, ['AppImage', 'deb']);
+  assert.equal(config.win.signExecutable, false);
+  assert.deepEqual(config.win.target, ['nsis', 'zip']);
+  assert.equal(config.nsis.allowToChangeInstallationDirectory, true);
   assert.equal(config.files.includes('desktop/**/*'), true);
   assert.equal(config.files.includes('lib/**/*'), true);
 });
@@ -52,8 +51,6 @@ test('package scripts separate unpacked packaging from installer distribution', 
 });
 
 test('tray icon asset exists', () => {
-  const source = read('desktop/assets/tray.svg');
-
-  assert.match(source, /<svg/);
-  assert.match(source, /Codex Usage Monitor|path|rect/);
+  const bytes = fs.readFileSync(path.join(root, 'desktop/assets/tray.png'));
+  assert.deepEqual([...bytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
 });
