@@ -6,8 +6,7 @@ const readline = require('node:readline');
 
 function observeCodexWindow(onChange, onError) {
   if (process.platform !== 'win32') return { close() {} };
-  const root = __dirname.replace(/app\.asar(?=[\\/])/, 'app.asar.unpacked');
-  const child = spawn(path.join(root, 'native', 'bin', 'window-observer.exe'), [], {
+  const child = spawn(path.join(__dirname, 'native', 'bin', 'window-observer.exe'), [], {
     windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'],
   });
   const lines = readline.createInterface({ input: child.stdout });

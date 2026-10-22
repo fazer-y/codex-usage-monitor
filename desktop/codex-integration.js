@@ -22,11 +22,12 @@ function findCodexCli({ run = spawnSync, exists = fs.existsSync, env = process.e
   return executable;
 }
 
-function installIntegration({ monitorExecutable = process.execPath,
-  userData = path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'Codex Usage Monitor'),
+function installIntegration({ monitorExecutable = process.env.CODEX_USAGE_MONITOR_EXECUTABLE || process.execPath,
+  userData = process.env.CODEX_USAGE_MONITOR_USER_DATA
+    || path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'Codex Usage Monitor'),
   codexCli, run = spawnSync } = {}) {
   const root = path.dirname(monitorExecutable);
-  const source = path.join(root, 'resources', 'app.asar');
+  const source = path.join(root, 'app');
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'plugin.json'), 'utf8'));
   const compatibility = JSON.parse(fs.readFileSync(path.join(root, '.codex-plugin', 'plugin.json'), 'utf8'));
   const entry = path.join(source, 'desktop', 'mcp-server.js');
@@ -39,8 +40,8 @@ function installIntegration({ monitorExecutable = process.execPath,
   write(path.join(plugin, 'plugin.json'), manifest);
   write(path.join(plugin, '.codex-plugin', 'plugin.json'), compatibility);
   write(path.join(plugin, 'mcp.json'), { $schema: 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json', mcpServers: { usage: {
-    type: 'stdio', command: path.basename(monitorExecutable), args: [entry],
-    env: { ELECTRON_RUN_AS_NODE: '1', PATH: root + path.delimiter + (process.env.PATH || '') },
+    type: 'stdio', command: path.basename(monitorExecutable), args: ['--mcp'],
+    env: { PATH: root + path.delimiter + (process.env.PATH || '') },
   } } });
   write(path.join(integration, '.agents', 'plugins', 'marketplace.json'), {
     name: 'codex-usage-monitor-local', plugins: [{ name: manifest.name,

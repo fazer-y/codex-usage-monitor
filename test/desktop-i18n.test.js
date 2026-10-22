@@ -1,9 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 const test = require('node:test');
 const { messages, resolveLocale, translator } = require('../desktop/i18n');
 const { CodexTheme, themeFromConfig } = require('../desktop/theme');
@@ -60,11 +58,4 @@ test('localized statistics retain token values, model names, and conversation ti
     assert.equal(model.metrics.find(metric => metric.kind === 'tokens').value, '2.5k');
   }
   assert.equal(/[\u3400-\u9fff]/.test(JSON.stringify(english)), false);
-});
-
-test('the renderer catalog uses the same translations without Node integration', () => {
-  const context = {};
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../desktop/i18n.js'), 'utf8'), context);
-  assert.equal(context.codexUsageI18n.translator('zh-CN')('expandStrip'), '展开统计条');
-  assert.equal(context.codexUsageI18n.translator('en')('expandStrip'), 'Expand statistics strip');
 });

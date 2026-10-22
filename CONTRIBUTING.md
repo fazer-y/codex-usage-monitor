@@ -1,7 +1,8 @@
 # Contributing
 
-Use Node.js 24 and Windows for desktop development. The build compiles the
-window observer with the system .NET Framework compiler.
+Use Node.js 24.5 or later and Windows for desktop development. The build compiles
+the WPF window and window observer with the system .NET Framework compiler.
+Install NSIS to build the installer, or set `NSIS_MAKENSIS` to `makensis.exe`.
 
 ```powershell
 npm ci
@@ -11,8 +12,8 @@ npm run desktop:package
 npm run desktop:dist
 ```
 
-`desktop:package` creates an unpacked app. `desktop:dist` creates the Windows
-one-click Windows installer in `dist/desktop`.
+`desktop:package` creates an unpacked app in `dist/desktop/windows-x64`.
+`desktop:dist` creates the one-click Windows installer in `dist/desktop`.
 
 ## Code and documentation
 

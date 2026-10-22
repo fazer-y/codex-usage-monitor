@@ -71,3 +71,13 @@ test('unknown prices keep token metrics and display an unavailable cost', async 
   assert.equal(vm.metrics.find(metric => metric.kind === 'tokens').value, '2.5k');
   assert.equal(vm.rows.some(row => row.label === '费用明细'), false);
 });
+
+test('Fast mode follows the recorded service tier without leaking between conversations', async () => {
+  const summary = await summarizeSessionFile(path.join(__dirname, 'fixtures', 'session-basic.jsonl'));
+  for (const serviceTier of ['priority', 'fast', 'ultrafast']) {
+    assert.equal(snapshotToViewModel({ status: 'ready', summary: { ...summary, serviceTier } }).fastMode, true);
+  }
+  for (const serviceTier of [null, 'default', 'auto', 'flex', 'unknown']) {
+    assert.equal(snapshotToViewModel({ status: 'ready', summary: { ...summary, serviceTier } }).fastMode, false);
+  }
+});

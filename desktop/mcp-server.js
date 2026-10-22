@@ -31,7 +31,8 @@ function createMcpServer({ getConnection, onClose = () => {} }) {
 }
 
 async function main() {
-  const userData = path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'Codex Usage Monitor');
+  const userData = process.env.CODEX_USAGE_MONITOR_USER_DATA
+    || path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'Codex Usage Monitor');
   const address = monitorAddress(userData);
   let connection = null;
   let connecting = null;
@@ -43,9 +44,9 @@ async function main() {
       try { connection = await connectMonitor(address); }
       catch {
         if (stopped) throw new Error('MCP connection closed.');
-        const env = { ...process.env };
-        delete env.ELECTRON_RUN_AS_NODE;
-        const child = spawn(process.execPath, ['--managed'], { env, detached: true, stdio: 'ignore', windowsHide: true });
+        const executable = process.env.CODEX_USAGE_MONITOR_EXECUTABLE;
+        if (!executable) throw new Error('Start the MCP server through Codex Usage Monitor.exe --mcp.');
+        const child = spawn(executable, ['--managed'], { env: process.env, detached: true, stdio: 'ignore', windowsHide: true });
         child.on('error', error => console.error('Monitor process: ' + error.message));
         child.unref();
         const deadline = Date.now() + 10000;

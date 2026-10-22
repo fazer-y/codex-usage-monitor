@@ -1,9 +1,11 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "codex-usage-monitor",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Live desktop statistics for the current Codex conversation.",
-  "author": { "name": "fazer-y" },
+  "author": {
+    "name": "fazer-y"
+  },
   "repository": "https://github.com/fazer-y/codex-usage-monitor",
   "license": "MIT",
   "extensions": {

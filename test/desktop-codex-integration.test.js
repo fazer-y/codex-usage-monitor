@@ -13,12 +13,12 @@ test('Codex registration creates a small plugin that reuses installed binaries',
   t.after(() => fs.rmSync(folder, { recursive: true, force: true }));
   const installed = path.join(folder, 'Installed App');
   const userData = path.join(folder, 'User Data');
-  fs.mkdirSync(path.join(installed, 'resources', 'app.asar', 'desktop'), { recursive: true });
+  fs.mkdirSync(path.join(installed, 'app', 'desktop'), { recursive: true });
   fs.mkdirSync(path.join(installed, '.codex-plugin'), { recursive: true });
   for (const name of ['plugin.json', '.codex-plugin/plugin.json']) fs.copyFileSync(path.join(root, name), path.join(installed, name));
   const executable = path.join(installed, 'Codex Usage Monitor.exe');
   fs.writeFileSync(executable, 'application');
-  fs.writeFileSync(path.join(installed, 'resources', 'app.asar', 'desktop', 'mcp-server.js'), 'server');
+  fs.writeFileSync(path.join(installed, 'app', 'desktop', 'mcp-server.js'), 'server');
   fs.mkdirSync(userData);
   fs.writeFileSync(path.join(userData, 'window-state.json'), '{"folded":true}');
   const calls = [];
@@ -34,8 +34,8 @@ test('Codex registration creates a small plugin that reuses installed binaries',
   assert.equal(config.$schema, 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json');
   assert.equal(config.mcpServers.usage.command, path.basename(executable));
   assert.ok(config.mcpServers.usage.env.PATH.startsWith(installed + path.delimiter));
-  assert.equal(config.mcpServers.usage.env.ELECTRON_RUN_AS_NODE, '1');
-  assert.equal(config.mcpServers.usage.args[0], path.join(installed, 'resources', 'app.asar', 'desktop', 'mcp-server.js'));
+  assert.equal(config.mcpServers.usage.env?.ELECTRON_RUN_AS_NODE, undefined);
+  assert.deepEqual(config.mcpServers.usage.args, ['--mcp']);
   assert.deepEqual(fs.readdirSync(path.join(result.root, 'plugin')).sort(), ['.codex-plugin', 'mcp.json', 'plugin.json']);
   installIntegration(options);
   assert.equal(calls.length, 4);
@@ -61,7 +61,7 @@ test('plugin metadata stays aligned with the packaged runtime', () => {
   assert.equal(manifest.version, pkg.version);
   assert.equal(compatibility.version, pkg.version);
   assert.equal(manifest.extensions['com.openai'].requires_local_executor, true);
-  assert.equal(config.mcpServers.usage.env.ELECTRON_RUN_AS_NODE, '1');
+  assert.equal(config.mcpServers.usage.env?.ELECTRON_RUN_AS_NODE, undefined);
   assert.equal(config.mcpServers.usage.command, './Codex Usage Monitor.exe');
   assert.equal(compatibility.mcpServers, './mcp.json');
 });

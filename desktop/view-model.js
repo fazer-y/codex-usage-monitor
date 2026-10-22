@@ -55,6 +55,7 @@ function snapshotToViewModel(snapshot, now = Date.now(), locale = 'en') {
 
   return {
     locale, status: 'ready', title: summary.modelName || summary.model || 'Codex', subtitle: summary.reasoningEffort || '',
+    fastMode: ['fast', 'priority', 'ultrafast'].includes(summary.serviceTier),
     conversationTitle: snapshot.conversationTitle || t('currentConversation'), trackingLabel,
     metrics: [
       metric('speed', t('speed'), speed, null, speedDescription),

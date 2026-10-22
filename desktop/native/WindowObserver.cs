@@ -14,6 +14,10 @@ internal static class WindowObserver
     [DllImport("user32.dll")] private static extern bool IsIconic(IntPtr window);
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint pid);
     [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr window, out Rect rect);
+    [DllImport("user32.dll")] private static extern uint GetDpiForWindow(IntPtr window);
+    [DllImport("user32.dll")] private static extern IntPtr MonitorFromWindow(IntPtr window, uint flags);
+    [DllImport("user32.dll")] private static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
+    [StructLayout(LayoutKind.Sequential)] private struct MonitorInfo { public int Size; public Rect Monitor, Work; public uint Flags; }
     [DllImport("user32.dll")] private static extern bool EnumWindows(EnumWindowProc callback, IntPtr parameter);
     [DllImport("user32.dll")] private static extern IntPtr GetWindow(IntPtr window, uint command);
     [DllImport("user32.dll")] private static extern bool SetProcessDpiAwarenessContext(IntPtr context);
@@ -96,15 +100,20 @@ internal static class WindowObserver
             {
                 uint pid;
                 GetWindowThreadProcessId(host, out pid);
+                var monitor = new MonitorInfo { Size = Marshal.SizeOf(typeof(MonitorInfo)) };
+                GetMonitorInfo(MonitorFromWindow(host, 2), ref monitor);
+                uint dpi = 96; try { dpi = GetDpiForWindow(host); } catch (EntryPointNotFoundException) { }
                 value = "{\"found\":true,\"pid\":" + pid + ",\"handle\":\"" + host.ToInt64()
                     + "\",\"foregroundPid\":" + foregroundPid + ",\"active\":" + (foreground == host ? "true" : "false")
                     + ",\"minimized\":" + (IsIconic(host) ? "true" : "false")
                     + ",\"x\":" + rect.Left + ",\"y\":" + rect.Top + ",\"width\":" + (rect.Right - rect.Left)
-                    + ",\"height\":" + (rect.Bottom - rect.Top) + "}";
+                    + ",\"height\":" + (rect.Bottom - rect.Top) + ",\"scale\":" + (dpi / 96.0).ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    + ",\"workArea\":{\"x\":" + monitor.Work.Left + ",\"y\":" + monitor.Work.Top
+                    + ",\"width\":" + (monitor.Work.Right - monitor.Work.Left) + ",\"height\":" + (monitor.Work.Bottom - monitor.Work.Top) + "}}";
             }
             else value = "{\"found\":false,\"foregroundPid\":" + foregroundPid + "}";
             if (value != previous) { Console.WriteLine(value); Console.Out.Flush(); previous = value; }
-            Thread.Sleep(33);
+            Thread.Sleep(100);
         }
     }
 }

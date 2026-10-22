@@ -1,17 +1,14 @@
 {
   "name": "codex-usage-monitor",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Adaptive desktop statistics strip for Codex conversations on Windows",
-  "main": "desktop/main.js",
+  "main": "desktop/native-main.js",
   "type": "commonjs",
   "scripts": {
     "test": "node --test test/*.test.js",
-    "desktop": "electron desktop/main.js",
-    "predesktop": "node desktop/build-native.js",
-    "predesktop:package": "node desktop/build-native.js",
-    "predesktop:dist": "node desktop/build-native.js",
-    "desktop:package": "electron-builder --dir --config desktop/electron-builder.json",
-    "desktop:dist": "electron-builder --config desktop/electron-builder.json --publish never"
+    "desktop": "node desktop/build-native.js && node desktop/launch-native.js",
+    "desktop:package": "node desktop/build-native.js && node desktop/package-native.js",
+    "desktop:dist": "node desktop/build-native.js && node desktop/package-native.js --installer"
   },
   "keywords": [
     "codex",
@@ -25,7 +22,7 @@
   "author": "fazer-y",
   "license": "MIT",
   "engines": {
-    "node": ">=24"
+    "node": ">=24.5"
   },
   "repository": {
     "type": "git",
@@ -35,10 +32,6 @@
     "url": "https://github.com/fazer-y/codex-usage-monitor/issues"
   },
   "homepage": "https://github.com/fazer-y/codex-usage-monitor#readme",
-  "devDependencies": {
-    "electron": "^42.5.1",
-    "electron-builder": "^26.15.3"
-  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
     "smol-toml": "1.9.1"
