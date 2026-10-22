@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
@@ -153,20 +154,20 @@ internal sealed class MonitorWindow : Window
         bolt = Glyph("M13,2 L4,14 L11,14 L10,22 L20,10 L13,10 Z", accent, 12, 14); bolt.Margin = new Thickness(5, 0, 0, 0); bolt.Visibility = Visibility.Collapsed; model.Children.Add(bolt);
         metrics.HorizontalAlignment = HorizontalAlignment.Center; Grid.SetColumn(metrics, 1);
         dockButton = Button("M16,9 L16,4 L17,3 L7,3 L8,4 L8,9 L5,12 L5,14 L19,14 L19,12 Z M12,14 L12,21", () => Send("docked", !docked));
-        expandButton = Button("M7,10 L12,15 L17,10", () => Send("expanded"));
+        expandButton = Button("M7,9.5 L12,14.5 L17,9.5", () => Send("expanded"));
         foldButton = Button("M9,6 L15,12 L9,18", () => Send("folded", true));
         actions.Children.Add(dockButton); actions.Children.Add(expandButton); actions.Children.Add(foldButton); Grid.SetColumn(actions, 2);
         strip.Children.Add(model); strip.Children.Add(metrics); strip.Children.Add(actions);
         restoreButton = Button("M15,6 L9,12 L15,18", () => Send("folded", false)); restoreButton.Width = Double.NaN; restoreButton.Height = Double.NaN;
         var body = new DockPanel { Margin = new Thickness(13, 10, 13, 8) };
         var header = new DockPanel { Margin = new Thickness(0, 0, 0, 7) };
-        refreshButton = Button("M20,7 L20,12 L15,12 M4,17 L4,12 L9,12 M5.6,7 A7,7 0 0 1 17.2,6 L20,9 M4,15 L6.8,18 A7,7 0 0 0 18.4,17", () => Send("refresh"));
+        refreshButton = Button("M21,12 A9,9 0 1 1 18.4,5.6 L21,8 M21,3 L21,8 L16,8", () => Send("refresh"));
         DockPanel.SetDock(refreshButton, Dock.Right); header.Children.Add(refreshButton);
         conversation.FontSize = 12; conversation.FontWeight = FontWeights.SemiBold; conversation.TextTrimming = TextTrimming.CharacterEllipsis; conversation.VerticalAlignment = VerticalAlignment.Center; header.Children.Add(conversation);
         DockPanel.SetDock(header, Dock.Top); body.Children.Add(header);
         var bottom = new StackPanel { Margin = new Thickness(0, 8, 0, 0) }; cost.FontSize = 10; footer.FontSize = 10; footer.TextWrapping = TextWrapping.Wrap; bottom.Children.Add(cost); bottom.Children.Add(footer);
         DockPanel.SetDock(bottom, Dock.Bottom); body.Children.Add(bottom);
-        body.Children.Add(new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = rows });
+        body.Children.Add(CreateDetailsScroller());
         details.Child = body; details.Visibility = Visibility.Collapsed;
         Grid.SetRow(details, 1); layout.Children.Add(strip); layout.Children.Add(details); panel.Child = layout; Content = panel;
         panel.MouseLeftButtonDown += delegate(object sender, MouseButtonEventArgs e) {
@@ -186,7 +187,47 @@ internal sealed class MonitorWindow : Window
     private static bool IsWithin(DependencyObject item, DependencyObject container) { while (item != null) { if (item == container) return true; item = FindParentElement(item); } return false; }
     private static FrameworkElement Glyph(string geometry, Brush brush, double width, double height)
     {
-        return new Viewbox { Width = width, Height = height, Child = new System.Windows.Shapes.Path { Data = Geometry.Parse(geometry), Stroke = brush, StrokeThickness = 1.6, StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round } };
+        var canvas = new Canvas { Width = 24, Height = 24 };
+        canvas.Children.Add(new System.Windows.Shapes.Path { Data = Geometry.Parse(geometry), Stroke = brush, StrokeThickness = 1.6,
+            StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round });
+        return new Viewbox { Width = width, Height = height, Stretch = Stretch.Uniform, Child = canvas,
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    }
+
+    private ScrollViewer CreateDetailsScroller()
+    {
+        const string template = @"<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
+            xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml' TargetType='{x:Type ScrollViewer}'>
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width='8'/></Grid.ColumnDefinitions>
+              <ScrollContentPresenter x:Name='PART_ScrollContentPresenter' Content='{TemplateBinding Content}'
+                  ContentTemplate='{TemplateBinding ContentTemplate}' CanContentScroll='False' Margin='0,0,5,0'/>
+              <ScrollBar x:Name='PART_VerticalScrollBar' Grid.Column='1' Width='5' MinWidth='0' MaxWidth='5' Orientation='Vertical'
+                  OverridesDefaultStyle='True' HorizontalAlignment='Center'
+                  Minimum='0' Maximum='{TemplateBinding ScrollableHeight}' ViewportSize='{TemplateBinding ViewportHeight}'
+                  Value='{Binding VerticalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}'
+                  Visibility='{TemplateBinding ComputedVerticalScrollBarVisibility}' Background='Transparent'>
+                <ScrollBar.Template><ControlTemplate TargetType='{x:Type ScrollBar}'>
+                  <Track x:Name='PART_Track' IsDirectionReversed='True'>
+                    <Track.DecreaseRepeatButton><RepeatButton Command='{x:Static ScrollBar.PageUpCommand}' Opacity='0' Focusable='False'/></Track.DecreaseRepeatButton>
+                    <Track.Thumb><Thumb Background='{DynamicResource MonitorScrollThumb}'>
+                      <Thumb.Template><ControlTemplate TargetType='{x:Type Thumb}'>
+                        <Border Background='{TemplateBinding Background}' CornerRadius='2.5'/>
+                      </ControlTemplate></Thumb.Template>
+                      <Thumb.Style><Style TargetType='{x:Type Thumb}'><Setter Property='Opacity' Value='0.35'/><Style.Triggers>
+                        <Trigger Property='IsMouseOver' Value='True'><Setter Property='Opacity' Value='0.7'/></Trigger>
+                        <Trigger Property='IsDragging' Value='True'><Setter Property='Opacity' Value='0.9'/></Trigger>
+                      </Style.Triggers></Style></Thumb.Style>
+                    </Thumb></Track.Thumb>
+                    <Track.IncreaseRepeatButton><RepeatButton Command='{x:Static ScrollBar.PageDownCommand}' Opacity='0' Focusable='False'/></Track.IncreaseRepeatButton>
+                  </Track>
+                </ControlTemplate></ScrollBar.Template>
+              </ScrollBar>
+            </Grid>
+          </ControlTemplate>";
+        return new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = rows,
+            Template = (ControlTemplate)XamlReader.Parse(template) };
     }
     private Button Button(string geometry, Action action)
     {
@@ -201,6 +242,7 @@ internal sealed class MonitorWindow : Window
 
     private void ApplyColors()
     {
+        Resources["MonitorScrollThumb"] = muted;
         panel.Background = surface; panel.BorderBrush = line; title.Foreground = ink; effort.Foreground = accent; effortBadge.Background = soft;
         conversation.Foreground = ink; footer.Foreground = muted; cost.Foreground = muted;
         details.BorderBrush = line; details.BorderThickness = detailsBelow ? new Thickness(0, 1, 0, 0) : new Thickness(0, 0, 0, 1);
@@ -209,7 +251,7 @@ internal sealed class MonitorWindow : Window
         foldButton.ToolTip = T("foldStrip", "Fold strip"); restoreButton.ToolTip = T("expandStrip", "Expand strip"); refreshButton.ToolTip = T("refresh", "Refresh"); bolt.ToolTip = T("fastMode", "Fast mode enabled");
         AutomationProperties.SetName(dockButton, Convert.ToString(dockButton.ToolTip)); AutomationProperties.SetName(expandButton, Convert.ToString(expandButton.ToolTip)); AutomationProperties.SetName(foldButton, Convert.ToString(foldButton.ToolTip)); AutomationProperties.SetName(restoreButton, Convert.ToString(restoreButton.ToolTip));
     }
-    private static void SetGlyphColor(FrameworkElement glyph, Brush color) { var view = glyph as Viewbox; if (view != null) ((System.Windows.Shapes.Path)view.Child).Stroke = color; }
+    private static void SetGlyphColor(FrameworkElement glyph, Brush color) { var view = glyph as Viewbox; if (view != null) ((System.Windows.Shapes.Path)((Canvas)view.Child).Children[0]).Stroke = color; }
 
     private void Render(Dictionary<string, object> value)
     {
@@ -268,7 +310,8 @@ internal sealed class MonitorWindow : Window
         Grid.SetRow(strip, detailsBelow ? 0 : 1); Grid.SetRow(details, detailsBelow ? 1 : 0);
         layout.RowDefinitions[0].Height = detailsBelow ? new GridLength(34) : new GridLength(1, GridUnitType.Star);
         layout.RowDefinitions[1].Height = detailsBelow ? new GridLength(1, GridUnitType.Star) : new GridLength(34);
-        expandButton.RenderTransformOrigin = new Point(0.5, 0.5); expandButton.RenderTransform = new RotateTransform(expanded == detailsBelow ? 180 : 0);
+        var expandGlyph = (FrameworkElement)expandButton.Content;
+        expandGlyph.RenderTransformOrigin = new Point(0.5, 0.5); expandGlyph.RenderTransform = new RotateTransform(expanded == detailsBelow ? 180 : 0);
         if (!dragging) {
             var bounds = Json.Map(Json.Get(data, "bounds"));
             SetWindowPos(handle, Json.Flag(data, "topmost") ? new IntPtr(-1) : new IntPtr(-2),

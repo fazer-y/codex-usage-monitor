@@ -6,6 +6,8 @@
 - Reuse an installed Node.js 24.5+ runtime and remove bundled Chromium and Node.js.
 - Preserve titlebar docking, responsive metrics, folding, themes, languages, and Codex lifecycle.
 - Move commands into a right-click menu and remove taskbar and system-tray icons.
+- Center vector icons on fixed canvases and keep chevrons stationary while rotating.
+- Replace the system scrollbar with a slim rounded details scrollbar.
 - Display Fast Mode with a lightning icon after reasoning effort.
 - Persist parsed sessions across restarts and expire caches after one week without access.
 - Retain incremental parsing state, usage deduplication, and in-flight tool timing in each cache.
