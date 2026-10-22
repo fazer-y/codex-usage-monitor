@@ -132,7 +132,7 @@ internal sealed class MonitorWindow : Window
 
     private void SetColors()
     {
-        surface = Color("surfaceFill", "#fafced"); ink = Color("text", "#3f453b"); muted = Color("muted", "#90978a");
+        surface = Color("surface", "#fafced"); ink = Color("text", "#3f453b"); muted = Color("muted", "#90978a");
         accent = Color("accentText", "#798d38"); line = Color("line", "#e6ebd2"); soft = Color("accentSoft", "#eef2db");
     }
 
@@ -243,7 +243,8 @@ internal sealed class MonitorWindow : Window
     private void ApplyColors()
     {
         Resources["MonitorScrollThumb"] = muted;
-        panel.Background = surface; panel.BorderBrush = line; title.Foreground = ink; effort.Foreground = accent; effortBadge.Background = soft;
+        var fill = surface.Clone(); fill.Opacity = expanded && !folded ? 0.94 : 0.88;
+        panel.Background = fill; panel.BorderBrush = line; title.Foreground = ink; effort.Foreground = accent; effortBadge.Background = soft;
         conversation.Foreground = ink; footer.Foreground = muted; cost.Foreground = muted;
         details.BorderBrush = line; details.BorderThickness = detailsBelow ? new Thickness(0, 1, 0, 0) : new Thickness(0, 0, 0, 1);
         SetGlyphColor(bolt, accent); foreach (Button button in new[] { dockButton, expandButton, foldButton, restoreButton, refreshButton }) if (button != null) SetGlyphColor(button.Content as FrameworkElement, button == dockButton && docked ? accent : muted);

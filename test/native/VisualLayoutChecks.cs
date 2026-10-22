@@ -13,6 +13,11 @@ internal static class VisualLayoutChecks
         try {
             var window = new MonitorWindow("unused", new string[0]);
             var type = typeof(MonitorWindow);
+            var panel = (Border)type.GetField("panel", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(window);
+            if (panel.Background.Opacity != 0.88 || window.Opacity != 1) throw new Exception("Strip background transparency changed.");
+            type.GetField("expanded", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(window, true);
+            type.GetMethod("ApplyColors", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(window, null);
+            if (panel.Background.Opacity != 0.94 || window.Opacity != 1) throw new Exception("Details background transparency changed.");
             foreach (string name in new[] { "dockButton", "expandButton", "foldButton", "restoreButton", "refreshButton" }) {
                 var button = (Button)type.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(window);
                 button.Width = 32; button.Height = 34;
@@ -39,7 +44,7 @@ internal static class VisualLayoutChecks
             if (scroller.VerticalOffset != 80) throw new Exception("Details scrolling failed.");
             type.GetField("stopping", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(window, true);
             window.Close();
-            Console.WriteLine("Icon centering, rotation stability, thin scrollbar, and scrolling passed.");
+            Console.WriteLine("Background transparency, icon centering, rotation stability, thin scrollbar, and scrolling passed.");
             return 0;
         } catch (Exception error) {
             Console.Error.WriteLine(error.GetType().Name + ": " + error.Message);

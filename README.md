@@ -14,6 +14,7 @@ A compact statistics strip for the Codex desktop app on Windows.
 - Reads appended log data for live updates and saves parsed chat caches across restarts. Caches expire after one week without access.
 - Uses a native Windows window and an existing Node.js runtime for a compact installation.
 - Uses Codex's local appearance settings, checked at startup and when entering a chat.
+- Uses translucent backgrounds with crisp text and icons.
 - Follows Codex's UI language: English, Simplified Chinese, and Traditional Chinese.
 - Expands for details and collapses three seconds after focus leaves.
 - Folds into a small right-side tab to free the titlebar; one click restores the strip.
