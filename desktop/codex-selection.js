@@ -6,16 +6,24 @@ const path = require('node:path');
 const os = require('node:os');
 
 function selectionFromLine(line) {
-  if (!line.includes('[AppServerConnection] response_routed ')
-      || !/\bmethod=thread\/attachment\/list\b/.test(line)
+  const viewActivity = line.includes('[host-app-server-manager] thread_stream_view_activity_changed ');
+  if (!viewActivity && !line.includes('[AppServerConnection] response_routed ')) return null;
+  const id = line.match(/\bconversationId=([\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12})\b/i)?.[1];
+  const time = Date.parse(line.slice(0, 24));
+  if (!id || !Number.isFinite(time)) return null;
+
+  if (viewActivity) {
+    const active = line.match(/\bactive=(true|false)\b/)?.[1];
+    return active ? { id, windowId: null, time, active: active === 'true' } : null;
+  }
+
+  if (!/\bmethod=thread\/attachment\/list\b/.test(line)
       || !/\berrorCode=null\b/.test(line)
       || !/\bhadInternalHandler=false\b/.test(line)
       || !/\bhadPending=true\b/.test(line)
       || !/\btargetDestroyed=false\b/.test(line)) return null;
-  const id = line.match(/\bconversationId=([\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12})\b/i)?.[1];
   const windowId = line.match(/\boriginWebcontentsId=(\d+)\b/)?.[1];
-  const time = Date.parse(line.slice(0, 24));
-  return id && windowId && Number.isFinite(time) ? { id, windowId: Number(windowId), time } : null;
+  return windowId ? { id, windowId: Number(windowId), time } : null;
 }
 
 class CodexSelection {
@@ -24,6 +32,7 @@ class CodexSelection {
     this.logsRoot = logsRoots[0];
     this.pid = null;
     this.selected = null;
+    this.hasViewActivity = false;
     this.file = null;
     this.offset = 0;
     this.pending = '';
@@ -37,6 +46,7 @@ class CodexSelection {
     this.offset = 0;
     this.pending = '';
     this.selected = null;
+    this.hasViewActivity = false;
     this.nextDiscovery = 0;
   }
 
@@ -86,7 +96,14 @@ class CodexSelection {
         this.pending = lines.pop();
         for (const line of lines) {
           const candidate = selectionFromLine(line);
-          if (candidate && (!this.selected || candidate.time >= this.selected.time)) this.selected = candidate;
+          if (!candidate || (this.selected && candidate.time < this.selected.time)) continue;
+          if (candidate.active === undefined) {
+            if (!this.hasViewActivity) this.selected = candidate;
+            continue;
+          }
+          this.hasViewActivity = true;
+          if (candidate.active) this.selected = candidate;
+          else if (!this.selected || this.selected.id === candidate.id) this.selected = { ...candidate, id: null };
         }
       }
     } catch {

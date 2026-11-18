@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Follow the conversation view events emitted by newer Codex desktop versions.
+- Show a waiting state for empty conversations and resolve new model names from the local Codex catalog.
+
 ## 0.3.0 - 2026-10-22
 
 - Replace Electron with a native WPF window and vector controls.

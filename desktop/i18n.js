@@ -3,6 +3,7 @@
 const messages = {
   en: {
     waiting: 'Waiting for a conversation', status: 'Status', readLocal: 'Reading local session statistics',
+    waitingUsage: 'Waiting for usage', modelPending: 'Awaiting model',
     followCurrent: 'Following the current Codex conversation', recentActivity: 'Most recently active conversation',
     currentConversation: 'Current conversation', model: 'Model', currentTurn: 'Current turn',
     turnSummary: '{steps} steps · {tools} tool calls · {elapsed}', turnTokens: 'Turn tokens',
@@ -32,6 +33,7 @@ const messages = {
   },
   'zh-CN': {
     waiting: '等待会话', status: '状态', readLocal: '读取本地会话统计',
+    waitingUsage: '等待用量', modelPending: '等待模型信息',
     followCurrent: '跟随 Codex 当前会话', recentActivity: '最近活动会话', currentConversation: '当前会话',
     model: '模型', currentTurn: '本轮', turnSummary: '{steps} 步 · {tools} 次工具调用 · {elapsed}',
     turnTokens: '本轮 Token', tokenPair: '{input} 输入 · {output} 输出', sessionTokens: '会话 Token',
@@ -59,6 +61,7 @@ const messages = {
   },
   'zh-TW': {
     waiting: '等待對話', status: '狀態', readLocal: '讀取本機對話統計',
+    waitingUsage: '等待用量', modelPending: '等待模型資訊',
     followCurrent: '跟隨 Codex 目前對話', recentActivity: '最近使用的對話', currentConversation: '目前對話',
     model: '模型', currentTurn: '本輪', turnSummary: '{steps} 步 · {tools} 次工具呼叫 · {elapsed}',
     turnTokens: '本輪 Token', tokenPair: '{input} 輸入 · {output} 輸出', sessionTokens: '對話 Token',

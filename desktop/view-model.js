@@ -10,13 +10,16 @@ function snapshotToViewModel(snapshot, now = Date.now(), locale = 'en') {
   const trackingLabel = t(snapshot?.selection?.mode === 'desktop' ? 'followCurrent' : 'recentActivity');
   if (!snapshot || snapshot.status !== 'ready' || !snapshot.summary) {
     return {
-      locale, status: snapshot?.status || 'waiting', title: t('waiting'), subtitle: '', conversationTitle: snapshot?.conversationTitle || '',
+      locale, status: snapshot?.status || 'waiting', title: t(snapshot?.reason === 'noUsage' ? 'waitingUsage' : 'waiting'),
+      subtitle: '', conversationTitle: snapshot?.conversationTitle || '',
       metrics: [], rows: snapshot?.message ? [{ label: t('status'), value: snapshot.reason ? t(snapshot.reason) : snapshot.message }] : [], cost: '',
       footer: t('readLocal'), trackingLabel, generatedAt: snapshot?.generatedAt,
     };
   }
 
   const summary = snapshot.summary;
+  const modelName = summary.model && summary.model !== 'unknown'
+    ? summary.modelName || summary.model : t('modelPending');
   const turn = summary.currentTurn;
   const elapsed = turnDuration(turn, now);
   const total = summary.totalUsage;
@@ -29,7 +32,7 @@ function snapshotToViewModel(snapshot, now = Date.now(), locale = 'en') {
   const speed = outputSpeed == null ? '—' : outputSpeed.toFixed(1) + ' token/s';
   const speedDescription = t('speedDescription');
   const rows = [
-    { label: t('model'), value: [summary.modelName, summary.reasoningEffort, summary.planType].filter(Boolean).join(' · ') },
+    { label: t('model'), value: [modelName, summary.reasoningEffort, summary.planType].filter(Boolean).join(' · ') },
     { label: t('currentTurn'), value: t('turnSummary', { steps: turn?.steps ?? 0, tools: turn?.toolCalls ?? 0, elapsed: formatDuration(elapsed) }) },
     { label: t('turnTokens'), value: t('tokenPair', { input: formatTokens(turn?.usage?.inputTokens || 0), output: formatTokens(turn?.usage?.outputTokens || 0) }) },
     { label: t('sessionTokens'), value: t('sessionTokenPair', { input: formatTokens(total.inputTokens), output: formatTokens(total.outputTokens), turns: summary.turnCount }) },
@@ -54,7 +57,7 @@ function snapshotToViewModel(snapshot, now = Date.now(), locale = 'en') {
   if (limits.length) rows.push({ label: t('quotaUsed'), value: limits.map(limit => limit.label + ' ' + percent(limit.usedPercent)).join(' · ') });
 
   return {
-    locale, status: 'ready', title: summary.modelName || summary.model || 'Codex', subtitle: summary.reasoningEffort || '',
+    locale, status: 'ready', title: modelName, subtitle: summary.reasoningEffort || '',
     fastMode: ['fast', 'priority', 'ultrafast'].includes(summary.serviceTier),
     conversationTitle: snapshot.conversationTitle || t('currentConversation'), trackingLabel,
     metrics: [

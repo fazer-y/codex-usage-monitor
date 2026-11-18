@@ -3,9 +3,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { defaultCodexHome, findLatestSessionFile } = require('../lib/session');
+const { modelInfo } = require('../lib/pricing');
 const { SessionReader } = require('./session-reader');
 const { SessionCatalog } = require('./session-catalog');
 const { CodexSelection } = require('./codex-selection');
+const { CodexModelNames } = require('./model-names');
 const { ServiceTierReader } = require('./service-tier-reader');
 
 function createUsageService(options = {}) {
@@ -13,6 +15,7 @@ function createUsageService(options = {}) {
   const reader = options.reader || new SessionReader({ cacheDirectory: options.cacheDirectory });
   const catalog = options.catalog || new SessionCatalog(codexHome);
   const selection = options.selection || new CodexSelection();
+  const modelNames = new CodexModelNames(codexHome);
   const serviceTiers = options.serviceTiers || new ServiceTierReader(codexHome);
   const intervalSeconds = secondsFromEnv(options.env || process.env, 'CODEX_USAGE_MONITOR_DESKTOP_INTERVAL_SECONDS', 15);
   let fallback = null;
@@ -40,7 +43,7 @@ function createUsageService(options = {}) {
     setHostPid(pid) { selection.setHostPid?.(pid); schedule(); },
     async getSnapshot() {
       const selected = await selection.poll();
-      let entry = selected ? catalog.find(selected.id) : null;
+      const entry = selected?.id ? catalog.find(selected.id) : null;
       if (!selected && (Date.now() >= nextFallback || !fallback)) {
         fallback = findLatestSessionFile(codexHome);
         nextFallback = Date.now() + 1500;
@@ -52,12 +55,17 @@ function createUsageService(options = {}) {
         selection: selected ? { id: selected.id, mode: 'desktop', viewedAt: selected.time } : { id: null, mode: 'activity' },
         conversationTitle: entry?.title || '',
       };
-      if (!transcriptPath) return { ...base, status: 'waiting', summary: null, reason: selected ? 'selectedLogMissing' : 'noSessions',
-        message: selected ? 'Waiting for the selected conversation log.' : 'No Codex session JSONL files found.' };
+      if (!transcriptPath) return { ...base, status: 'waiting', summary: null, reason: selected?.id ? 'selectedLogMissing' : 'noSessions',
+        message: selected?.id ? 'Waiting for the selected conversation log.'
+          : selected ? 'Waiting for a Codex conversation.' : 'No Codex session JSONL files found.' };
       try {
         let summary = await reader.read(transcriptPath);
-        if (!summary || (selected && summary.sessionId !== selected.id)) {
+        if (!summary || (selected?.id && summary.sessionId !== selected.id)
+            || (!summary.model && summary.requestCount === 0)) {
           return { ...base, status: 'waiting', summary: null, reason: 'noUsage', message: 'Waiting for usage in the selected conversation.' };
+        }
+        if (summary.model && summary.model !== 'unknown' && !modelInfo(summary.model)) {
+          summary = { ...summary, modelName: await modelNames.find(summary.model) };
         }
         const tier = serviceTiers.read(summary.sessionId);
         if (tier && tier.recordedAt >= (Date.parse(summary.serviceTierUpdatedAt) || 0)) {
@@ -76,6 +84,7 @@ function createUsageService(options = {}) {
             const file = filename?.toString() || '';
             if (root === codexHome) {
               if (file.endsWith('.jsonl') && (!activeFile || path.resolve(root, file) === activeFile)) schedule();
+              else if (file === 'models_cache.json') schedule();
               else if (/^logs_\d+\.sqlite(?:-wal)?$/.test(file)) schedule(1000);
             } else if (file.endsWith('.log') && file.includes('-' + selection.pid + '-t0-')) schedule();
           });

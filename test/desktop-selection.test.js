@@ -24,6 +24,11 @@ function viewLine(id, time = '2026-10-21T12:00:00.000Z') {
     + ' errorCode=null hadInternalHandler=false hadPending=true method=thread/attachment/list originWebcontentsId=1 targetDestroyed=false\n';
 }
 
+function activityLine(id, active, time) {
+  return time + ' info [host-app-server-manager] thread_stream_view_activity_changed active=' + active
+    + ' conversationId=' + id + ' resumeState=resumed streamRole=owner\n';
+}
+
 test('selection accepts successful desktop view requests and rejects background events', () => {
   const line = viewLine(idA);
   assert.equal(selectionFromLine(line).id, idA);
@@ -49,6 +54,23 @@ test('desktop selection tails completed log lines and resets when the host chang
   assert.equal((await selection.poll()).id, idB);
   selection.setHostPid(456);
   assert.equal(await selection.poll(), null);
+});
+
+test('desktop view activity follows opened conversations and ignores background attachment requests', async t => {
+  const logsRoot = temp(t);
+  const file = path.join(logsRoot, 'codex-desktop-test-123-t0-i1-120000-0.log');
+  const time = seconds => '2026-11-18T12:00:' + String(seconds).padStart(2, '0') + '.000Z';
+  fs.writeFileSync(file, activityLine(idA, true, time(0)));
+  const selection = new CodexSelection({ logsRoot });
+  selection.setHostPid(123);
+  assert.equal((await selection.poll()).id, idA);
+  fs.appendFileSync(file, viewLine(idB, time(1))
+    .replace('originWebcontentsId=1', 'originWebcontentsId=null').replace('targetDestroyed=false', 'targetDestroyed=null'));
+  assert.equal((await selection.poll()).id, idA);
+  fs.appendFileSync(file, activityLine(idB, true, time(2)) + activityLine(idA, false, time(3)) + viewLine(idA, time(4)));
+  assert.equal((await selection.poll()).id, idB);
+  fs.appendFileSync(file, activityLine(idB, false, time(5)));
+  assert.equal((await selection.poll()).id, null);
 });
 
 test('log discovery includes Windows Store cache folders without fixed user paths', t => {
@@ -105,5 +127,9 @@ test('selected desktop conversations stay selected while other logs are written'
     const missing = await service.getSnapshot();
     assert.equal(missing.status, 'waiting');
     assert.equal(missing.summary, null);
+    selected = { id: null };
+    const noConversation = await service.getSnapshot();
+    assert.equal(noConversation.status, 'waiting');
+    assert.equal(noConversation.transcriptPath, null);
   } finally { service.close(); }
 });

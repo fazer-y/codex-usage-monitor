@@ -67,6 +67,7 @@ test('unknown prices keep token metrics and display an unavailable cost', async 
   summary.modelName = 'unknown';
   summary.cost = { usd: null, knownUsd: 0, complete: false, breakdown: {} };
   const vm = snapshotToViewModel({ status: 'ready', summary });
+  assert.equal(vm.title, '等待模型信息');
   assert.equal(vm.metrics.find(metric => metric.kind === 'cost').value, '—');
   assert.equal(vm.metrics.find(metric => metric.kind === 'tokens').value, '2.5k');
   assert.equal(vm.rows.some(row => row.label === '费用明细'), false);
