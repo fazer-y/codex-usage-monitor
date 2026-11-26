@@ -4,6 +4,8 @@
 
 A compact statistics strip for the Codex desktop app on Windows.
 
+For Google Antigravity Desktop, see [Antigravity Usage Monitor](antigravity/README.md).
+
 ## Features
 
 - Follows the current conversation, including existing chats.

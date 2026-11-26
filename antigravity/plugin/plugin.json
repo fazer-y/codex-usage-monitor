@@ -1,0 +1,9 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "usage-monitor-desktop",
+  "displayName": "Usage Monitor",
+  "version": "0.1.0",
+  "description": "Live conversation usage in an unobtrusive Windows title bar.",
+  "author": { "name": "fazer-y", "url": "https://github.com/fazer-y" },
+  "license": "MIT"
+}

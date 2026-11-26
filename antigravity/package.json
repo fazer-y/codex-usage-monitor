@@ -1,0 +1,15 @@
+{
+  "name": "antigravity-usage-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Live conversation statistics for Antigravity Desktop on Windows",
+  "license": "MIT",
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "build": "node desktop/build-native.js",
+    "install:plugin": "node desktop/install-plugin.js",
+    "package:windows": "node desktop/package-windows.js",
+    "start": "node desktop/launch.js",
+    "test": "node --test"
+  }
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Usage Monitor</title>
+<style>
+  :root { color-scheme: light; font: 14px/1.5 "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; background: #fafbfc; color: #21242b; }
+  body.dark { color-scheme: dark; background: #1d2026; color: #f0f1f6; }
+  main { width: min(100% - 40px, 1040px); margin: 32px auto; }
+  header { margin-bottom: 24px; }
+  h1 { margin: 0 0 5px; font-size: 22px; font-weight: 650; }
+  h2 { margin: 0 0 8px; font-size: 14px; font-weight: 650; }
+  p { margin: 0; }
+  #conversation { font-weight: 550; overflow-wrap: anywhere; }
+  #model { margin-top: 3px; }
+  #groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 12px; align-items: start; }
+  section { padding: 14px; border: 1px solid #e1e5ed; background: #fff; border-radius: 9px; }
+  .dark section { border-color: #383d48; background: #252830; }
+  dl { margin: 0; }
+  dl div { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid #edf0f5; }
+  .dark dl div { border-color: #383d48; }
+  dt, #model, #status { color: #5c6576; }
+  .dark dt, .dark #model, .dark #status { color: #b0b8c6; }
+  dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  @media (max-width: 500px) { main { width: calc(100% - 24px); margin: 16px auto; } }
+</style>
+<script src="/preload.js"></script>
+<script defer src="/details.js"></script>
+<body>
+  <main>
+    <header>
+      <h1 id="conversation">Usage Monitor</h1>
+      <p id="model" hidden></p>
+    </header>
+    <p id="status" role="status">Loading usage…</p>
+    <div id="groups"></div>
+  </main>
+</body>
+</html>

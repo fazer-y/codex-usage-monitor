@@ -4,6 +4,8 @@
 
 Windows 上的 Codex 桌面会话统计条。
 
+Google Antigravity 桌面端请使用[反重力用量统计条](antigravity/README.zh-CN.md)。
+
 ## 功能
 
 - 跟随当前会话，支持已有会话。

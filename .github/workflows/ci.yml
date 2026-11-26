@@ -21,3 +21,5 @@ jobs:
       - run: npm ci
       - run: npm run desktop:package
       - run: npm test
+      - run: npm --prefix antigravity test
+      - run: npm --prefix antigravity run package:windows
